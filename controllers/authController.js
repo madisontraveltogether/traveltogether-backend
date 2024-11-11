@@ -5,11 +5,11 @@ const config = require('../config/config');
 
 // Helper functions to generate tokens
 const generateAccessToken = (userId) => {
-  return jwt.sign({ userId }, config.jwt.secret, { expiresIn: config.jwt.expiresIn });
+  return jwt.sign({ userId }, config.jwtSecret, { expiresIn: '7d' });
 };
 
 const generateRefreshToken = (userId) => {
-  return jwt.sign({ userId }, config.jwt.refreshTokenSecret, { expiresIn: config.jwt.refreshTokenExpiresIn });
+  return jwt.sign({ userId }, config.jwtSecret, { expiresIn: '7d' });
 };
 
 // Register a new user
@@ -31,6 +31,7 @@ exports.register = async (req, res) => {
     const accessToken = generateAccessToken(user._id);
     const refreshToken = generateRefreshToken(user._id);
 
+    // Save refresh token in user record
     user.refreshToken = refreshToken;
     await user.save();
 
@@ -40,6 +41,7 @@ exports.register = async (req, res) => {
       user: { id: user._id, name: user.name, email: user.email }
     });
   } catch (error) {
+    console.error("Error during registration:", error);
     res.status(500).json({ message: 'Server error' });
   }
 };
@@ -47,30 +49,27 @@ exports.register = async (req, res) => {
 // Login an existing user
 exports.login = async (req, res) => {
   const { email, password } = req.body;
+  console.log("Login request received:", { email, password }); // Log incoming data
 
   try {
     const user = await User.findOne({ email });
     if (!user) {
+      console.log("User not found");
       return res.status(400).json({ message: 'Invalid credentials' });
     }
 
     const isMatch = await bcrypt.compare(password, user.password);
     if (!isMatch) {
+      console.log("Password mismatch");
       return res.status(400).json({ message: 'Invalid credentials' });
     }
 
     const accessToken = generateAccessToken(user._id);
-    const refreshToken = generateRefreshToken(user._id);
+    console.log("Access token generated successfully");
 
-    user.refreshToken = refreshToken;
-    await user.save();
-
-    res.status(200).json({
-      accessToken,
-      refreshToken,
-      user: { id: user._id, name: user.name, email: user.email }
-    });
+    res.status(200).json({ accessToken, user: { id: user._id, name: user.name, email: user.email } });
   } catch (error) {
+    console.error("Server error during login:", error);
     res.status(500).json({ message: 'Server error' });
   }
 };
@@ -84,18 +83,19 @@ exports.refreshToken = async (req, res) => {
   }
 
   try {
-    const decoded = jwt.verify(refreshToken, config.jwt.refreshTokenSecret);
+    const decoded = jwt.verify(refreshToken, config.jwtSecret);
     const user = await User.findById(decoded.userId);
 
     if (!user || user.refreshToken !== refreshToken) {
       return res.status(403).json({ message: 'Invalid refresh token' });
     }
 
-    const accessToken = generateAccessToken(user._id);
+    const newAccessToken = generateAccessToken(user._id);
 
-    res.status(200).json({ accessToken });
+    res.status(200).json({ accessToken: newAccessToken });
   } catch (error) {
-    return res.status(403).json({ message: 'Invalid or expired refresh token' });
+    console.error("Error during token refresh:", error);
+    res.status(403).json({ message: 'Invalid or expired refresh token' });
   }
 };
 
@@ -112,6 +112,7 @@ exports.logout = async (req, res) => {
 
     res.status(200).json({ message: 'Logged out successfully' });
   } catch (error) {
+    console.error("Error during logout:", error);
     res.status(500).json({ message: 'Server error' });
   }
 };
@@ -125,6 +126,7 @@ exports.getUser = async (req, res) => {
     }
     res.status(200).json(user);
   } catch (error) {
+    console.error("Error fetching user info:", error);
     res.status(500).json({ message: 'Server error' });
   }
 };

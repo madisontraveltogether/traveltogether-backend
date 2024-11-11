@@ -4,7 +4,7 @@ const config = require('./config'); // Import the config file
 
 const connectDB = async () => {
   try {
-    await mongoose.connect(config.database.uri, {
+    await mongoose.connect(config.mongoURI, {
       useNewUrlParser: true,
       useUnifiedTopology: true,
       // Additional options can go here, or retrieve from config if needed

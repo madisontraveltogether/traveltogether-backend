@@ -1,34 +1,25 @@
 const express = require('express');
-const tripController = require('../controllers/tripController');
+const tripController = require('../controllers/tripController'); // Ensure the path is correct
 const authMiddleware = require('../middlewares/authMiddleware');
 
 const router = express.Router();
 
-// Create a new trip
+// Route to create a new trip
 router.post('/', authMiddleware, tripController.createTrip);
 
-// Get trip details
-router.get('/:tripId', authMiddleware, tripController.getTrip);
+// Route to get trip details by ID
+router.get('/:tripId', authMiddleware, tripController.getTripDetails);
 
-// Get trip summary for dashboard or overview
-router.get('/:tripId/summary', authMiddleware, tripController.getTripSummary);
-
-// Update trip details
+// Route to update trip details by ID
 router.patch('/:tripId', authMiddleware, tripController.updateTrip);
 
-// Delete a trip
+// Route to delete a trip by ID
 router.delete('/:tripId', authMiddleware, tripController.deleteTrip);
 
-// Add a guest to a trip
+// Route to add a guest to a trip
 router.post('/:tripId/guests', authMiddleware, tripController.addGuest);
 
-// Remove a guest from a trip
-router.delete('/:tripId/guests/:guestId', authMiddleware, tripController.removeGuest);
-
-// Add a collaborator to a trip
-router.post('/:tripId/collaborators', authMiddleware, tripController.addCollaborator);
-
-// Remove a collaborator from a trip
-router.delete('/:tripId/collaborators/:collaboratorId', authMiddleware, tripController.removeCollaborator);
+// Route to remove a guest from a trip
+router.delete('/:tripId/guests', authMiddleware, tripController.removeGuest);
 
 module.exports = router;

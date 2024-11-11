@@ -63,6 +63,7 @@ const PollSchema = new Schema({
 
 // Main Trip Schema
 const TripSchema = new Schema({
+  tripId: { type: String, unique: true, sparse: true },
   name: { type: String, required: true },
   location: String,
   description: String,

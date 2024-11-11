@@ -1,9 +1,11 @@
 const Trip = require('../models/tripModel');
 const User = require('../models/userModel');
+const { v4: uuidv4 } = require('uuid'); 
 
 // Create a new trip
 exports.createTrip = async ({ name, location, description, startDate, endDate, privacy, tripType, coverImage, collaborators, organizer }) => {
   const trip = new Trip({
+    tripId: uuidv4(),
     name,
     location,
     description,

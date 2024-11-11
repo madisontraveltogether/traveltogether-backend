@@ -1,70 +1,142 @@
-// tripService.js
+// tripController.js
+const mongoose = require('mongoose');
 const Trip = require('../models/tripModel');
 
-exports.createTrip = async (tripData) => {
-  const trip = new Trip(tripData);
-  await trip.save();
-  return trip;
-};
+// Create a new trip
+exports.createTrip = async (req, res) => {
+  const { name, location, description, startDate, endDate, privacy, organizer } = req.body;
 
-exports.getTrip = async (tripId) => {
-  return Trip.findById(tripId).populate('organizer collaborators guests');
-};
+  try {
+    const trip = new Trip({
+      name,
+      location,
+      description,
+      startDate,
+      endDate,
+      privacy,
+      organizer,
+    });
+    await trip.save();
 
-exports.getTripSummary = async (tripId) => {
-  return Trip.findById(tripId, 'name location startDate endDate organizer coverImage')
-             .populate('organizer');
-};
-
-exports.updateTrip = async (tripId, updateData) => {
-  return Trip.findByIdAndUpdate(tripId, updateData, { new: true });
-};
-
-exports.deleteTrip = async (tripId) => {
-  const trip = await Trip.findById(tripId);
-  if (trip) {
-    await trip.remove();
-    return true;
+    res.status(201).json(trip);
+  } catch (error) {
+    res.status(500).json({ message: 'Server error', error: error.message });
   }
-  return false;
 };
 
-exports.addGuest = async (tripId, guestId) => {
-  const trip = await Trip.findById(tripId);
-  if (!trip) throw new Error('Trip not found');
+// Get details of a specific trip by ID
+exports.getTripDetails = async (req, res) => {
+  const { tripId } = req.params;
 
-  if (!trip.guests.includes(guestId)) {
+  // Validate the ID format
+  if (!mongoose.isValidObjectId(tripId)) {
+    return res.status(400).json({ message: 'Invalid trip ID format' });
+  }
+
+  try {
+    const trip = await Trip.findById(tripId).populate('organizer').populate('guests');
+    if (!trip) {
+      return res.status(404).json({ message: 'Trip not found' });
+    }
+    res.status(200).json(trip);
+  } catch (error) {
+    res.status(500).json({ message: 'Server error', error: error.message });
+  }
+};
+
+// Update trip details by ID
+exports.updateTrip = async (req, res) => {
+  const { tripId } = req.params;
+  const updateData = req.body;
+
+  // Validate the ID format
+  if (!mongoose.isValidObjectId(tripId)) {
+    return res.status(400).json({ message: 'Invalid trip ID format' });
+  }
+
+  try {
+    const trip = await Trip.findByIdAndUpdate(tripId, updateData, { new: true });
+    if (!trip) {
+      return res.status(404).json({ message: 'Trip not found' });
+    }
+    res.status(200).json(trip);
+  } catch (error) {
+    res.status(500).json({ message: 'Server error', error: error.message });
+  }
+};
+
+// Delete a specific trip by ID
+exports.deleteTrip = async (req, res) => {
+  const { tripId } = req.params;
+
+  // Validate the ID format
+  if (!mongoose.isValidObjectId(tripId)) {
+    return res.status(400).json({ message: 'Invalid trip ID format' });
+  }
+
+  try {
+    const trip = await Trip.findByIdAndDelete(tripId);
+    if (!trip) {
+      return res.status(404).json({ message: 'Trip not found' });
+    }
+    res.status(200).json({ message: 'Trip deleted successfully' });
+  } catch (error) {
+    res.status(500).json({ message: 'Server error', error: error.message });
+  }
+};
+
+// Add a guest to a trip
+exports.addGuest = async (req, res) => {
+  const { tripId } = req.params;
+  const { guestId } = req.body;
+
+  // Validate the ID format
+  if (!mongoose.isValidObjectId(tripId) || !mongoose.isValidObjectId(guestId)) {
+    return res.status(400).json({ message: 'Invalid ID format' });
+  }
+
+  try {
+    const trip = await Trip.findById(tripId);
+    if (!trip) {
+      return res.status(404).json({ message: 'Trip not found' });
+    }
+
+    // Check if the guest is already in the list
+    if (trip.guests.includes(guestId)) {
+      return res.status(400).json({ message: 'Guest already added' });
+    }
+
     trip.guests.push(guestId);
+    await trip.save();
+
+    res.status(200).json(trip);
+  } catch (error) {
+    res.status(500).json({ message: 'Server error', error: error.message });
   }
-  await trip.save();
-  return trip;
 };
 
-exports.removeGuest = async (tripId, guestId) => {
-  const trip = await Trip.findById(tripId);
-  if (!trip) throw new Error('Trip not found');
+// Remove a guest from a trip
+exports.removeGuest = async (req, res) => {
+  const { tripId } = req.params;
+  const { guestId } = req.body;
 
-  trip.guests.pull(guestId);
-  await trip.save();
-  return trip;
-};
-
-exports.addCollaborator = async (tripId, collaboratorId) => {
-  const trip = await Trip.findById(tripId);
-  if (!trip) throw new Error('Trip not found');
-
-  if (!trip.collaborators.includes(collaboratorId)) {
-    trip.collaborators.push(collaboratorId);
+  // Validate the ID format
+  if (!mongoose.isValidObjectId(tripId) || !mongoose.isValidObjectId(guestId)) {
+    return res.status(400).json({ message: 'Invalid ID format' });
   }
-  await trip.save();
-  return trip;
-};
 
-exports.removeCollaborator = async (tripId, collaboratorId) => {
-  const trip = await Trip.findById(tripId);
-  if (!trip) throw new Error('Trip not found');
+  try {
+    const trip = await Trip.findById(tripId);
+    if (!trip) {
+      return res.status(404).json({ message: 'Trip not found' });
+    }
 
-  trip.collaborators.pull(collaboratorId);
-  await trip.save();
-  return trip;
+    // Remove the guest from the list
+    trip.guests = trip.guests.filter(id => id.toString() !== guestId.toString());
+    await trip.save();
+
+    res.status(200).json(trip);
+  } catch (error) {
+    res.status(500).json({ message: 'Server error', error: error.message });
+  }
 };
