@@ -23,9 +23,9 @@ exports.createExpense = async (req, res) => {
       description
     });
 
-    res.status(201).json(expense);
+    res.status(201).json(expense); // Return the created expense
   } catch (error) {
-    res.status(400).json({ message: error.message });
+    res.status(500).json({ message: 'Server error' });
   }
 };
 
@@ -39,8 +39,23 @@ exports.getExpenses = async (req, res) => {
       return res.status(404).json({ message: 'Trip not found' });
     }
 
-    const expenses = await expenseService.getExpenses(tripId);
-    res.status(200).json(expenses);
+    const expenses = await expenseService.getExpenses(tripId); // Retrieve expenses from service
+    res.status(200).json(expenses); // Send the expenses data
+  } catch (error) {
+    res.status(500).json({ message: 'Server error' });
+  }
+};
+
+// Get a specific expense by ID
+exports.getExpenseById = async (req, res) => {
+  const { tripId, expenseId } = req.params;
+
+  try {
+    const expense = await expenseService.getExpenseById(tripId, expenseId);
+    if (!expense) {
+      return res.status(404).json({ message: 'Expense not found' });
+    }
+    res.status(200).json(expense);
   } catch (error) {
     res.status(500).json({ message: 'Server error' });
   }
