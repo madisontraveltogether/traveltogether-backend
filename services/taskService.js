@@ -12,15 +12,15 @@ exports.createTask = async (tripId, { title, description, assignedTo, dueDate, p
   trip.tasks.push(task);
   await trip.save();
 
-  // Send notification to assigned users if any
-  if (assignedTo && assignedTo.length > 0) {
-    for (const user of assignedTo) {
-      await notificationService.notifyTaskAssignment(trip, task, user);
-    }
-  }
+//   // Send notification to assigned users if any
+//   if (assignedTo && assignedTo.length > 0) {
+//     for (const user of assignedTo) {
+//       await notificationService.notifyTaskAssignment(trip, task, user);
+//     }
+//   }
 
-  return task;
-};
+   return task;
+ };
 
 // Retrieve all tasks for a specific trip
 exports.getTasks = async (tripId) => {

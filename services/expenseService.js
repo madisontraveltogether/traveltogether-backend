@@ -1,6 +1,7 @@
 const Trip = require('../models/tripModel');
 
 exports.createExpense = async (tripId, { title, amount, payer, splitType, splitWith }) => {
+
   const trip = await Trip.findById(tripId);
   if (!trip) throw new Error('Trip not found');
 
@@ -71,15 +72,34 @@ exports.updateExpense = async (tripId, expenseId, updateData) => {
 
 // Delete an expense by ID
 exports.deleteExpense = async (tripId, expenseId) => {
-  const trip = await Trip.findById(tripId);
-  if (!trip) throw new Error('Trip not found');
+  try {
+    console.log("Received tripId:", tripId);
+    console.log("Received expenseId:", expenseId);
 
-  const expense = trip.expenses.id(expenseId);
-  if (!expense) throw new Error('Expense not found');
+    const trip = await Trip.findById(tripId);
+    if (!trip) {
+      console.error("Trip not found");
+      throw new Error('Trip not found');
+    }
 
-  expense.remove();
-  await trip.save();
-  return expense;
+    const initialLength = trip.expenses.length;
+
+    // Attempt to filter out the specific expense
+    trip.expenses = trip.expenses.filter(exp => exp._id.toString() !== expenseId.toString());
+    if (trip.expenses.length === initialLength) {
+      console.error("Expense not found");
+      throw new Error('Expense not found');
+    }
+
+    // Save the modified trip document
+    await trip.save();
+    console.log("Expense deleted successfully");
+
+    return { message: 'Expense deleted successfully' };
+  } catch (error) {
+    console.error("Error deleting expense:", error.message);
+    throw new Error(error.message);
+  }
 };
 
 // Helper function to calculate split based on split type

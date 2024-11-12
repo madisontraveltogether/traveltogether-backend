@@ -3,23 +3,29 @@ const User = require('../models/userModel');
 const { v4: uuidv4 } = require('uuid'); 
 
 // Create a new trip
-exports.createTrip = async ({ name, location, description, startDate, endDate, privacy, tripType, coverImage, collaborators, organizer }) => {
-  const trip = new Trip({
-    tripId: uuidv4(),
-    name,
-    location,
-    description,
-    startDate,
-    endDate,
-    privacy,
-    tripType,
-    coverImage,
-    organizer,
-    collaborators
-  });
-  await trip.save();
+exports.createTrip = async (req, res) => {
+  const { name, location, description, startDate, endDate, privacy, tripType, coverImage, collaborators } = req.body;
+  const organizer = req.user.userId; // Assume user ID is available from authentication middleware
 
-  return trip;
+  try {
+    const trip = new Trip({
+      name,
+      location,
+      description,
+      startDate,
+      endDate,
+      privacy,
+      tripType,
+      coverImage,
+      organizer,
+      collaborators
+    });
+    await trip.save();
+
+    res.status(201).json(trip);
+  } catch (error) {
+    res.status(500).json({ message: 'Server error', error: error.message });
+  }
 };
 
 // Retrieve full trip details by ID

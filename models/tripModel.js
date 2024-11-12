@@ -2,21 +2,20 @@ const mongoose = require('mongoose');
 const Schema = mongoose.Schema;
 
 // Expense Subdocument Schema
-const ExpenseSchema = new Schema({
+const ExpenseSchema = new mongoose.Schema({
   title: { type: String, required: true },
   amount: { type: Number, required: true },
-  payer: { type: Schema.Types.ObjectId, ref: 'User', required: true },
-  splitType: { type: String, enum: ['even', 'byAmount', 'byPercentage', 'byShares'], required: true },
+  payer: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
+  splitType: { type: String, enum: ['even', 'byAmount', 'byPercentage', 'byShares'], default: null }, // Optional
   splitWith: [
     {
-      user: { type: Schema.Types.ObjectId, ref: 'User', required: true },
-      amount: Number,
-      percentage: Number,
-      shares: Number,
-      status: { type: String, enum: ['pending', 'paid'], default: 'pending' }
+      user: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
+      amount: { type: Number }
     }
   ],
-  createdAt: { type: Date, default: Date.now }
+  date: Date,
+  time: String,
+  description: String,
 });
 
 // Itinerary Item Subdocument Schema
@@ -48,26 +47,27 @@ const TaskSchema = new Schema({
   isRecurring: { type: Boolean, default: false }
 });
 
-// Poll Subdocument Schema
-const PollSchema = new Schema({
-  question: { type: String, required: true },
-  options: [
-    {
-      option: String,
-      votes: [{ type: Schema.Types.ObjectId, ref: 'User' }]
-    }
-  ],
-  expirationDate: Date, // Poll expiration date
-  maxVotesPerUser: { type: Number, default: 1 } // Max votes per user
+const PollOptionSchema = new mongoose.Schema({
+  text: { type: String, required: true },
+  votes: [{ type: mongoose.Schema.Types.ObjectId, ref: 'User', default: [] }] // Array of ObjectIds
 });
+
+const PollSchema = new mongoose.Schema({
+  question: { type: String, required: true },
+  options: [PollOptionSchema],
+  expirationDate: Date,
+  maxVotesPerUser: { type: Number, default: 1 },
+  createdAt: { type: Date, default: Date.now }
+});
+
 
 // Main Trip Schema
 const TripSchema = new Schema({
-  tripId: { type: String, unique: true, sparse: true },
+
   name: { type: String, required: true },
   location: String,
   description: String,
-  organizer: { type: Schema.Types.ObjectId, ref: 'User', required: true },
+  organizer: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
   guests: [{ type: Schema.Types.ObjectId, ref: 'User' }],
   collaborators: [{ type: Schema.Types.ObjectId, ref: 'User' }], // Users with edit permissions
   startDate: Date,
@@ -76,7 +76,6 @@ const TripSchema = new Schema({
   tripType: { type: String, enum: ['vacation', 'business', 'family', 'adventure'], default: 'vacation' },
   coverImage: String,
   createdAt: { type: Date, default: Date.now },
-
   expenses: [ExpenseSchema],   // Embedded expenses
   itinerary: [ItineraryItemSchema],  // Embedded itinerary items
   tasks: [TaskSchema],         // Embedded tasks

@@ -8,7 +8,7 @@ exports.createPoll = async (tripId, pollData) => {
 
   const poll = {
     question: pollData.question,
-    options: pollData.options.map((option) => ({ text: option, votes: 0 })),
+    options: pollData.options.map((option) => ({ text: option, votes: [] })), // Initialize votes as empty array
     expirationDate: pollData.expirationDate,
     maxVotesPerUser: pollData.maxVotesPerUser || 1,
     createdAt: new Date(),
@@ -19,6 +19,7 @@ exports.createPoll = async (tripId, pollData) => {
 
   return poll;
 };
+
 
 // Get all polls for a specific trip
 exports.getPolls = async (tripId) => {
@@ -70,19 +71,18 @@ exports.voteOnPoll = async (tripId, pollId, optionId, userId) => {
     throw new Error('Poll has expired');
   }
 
-  // Check if the user has already voted on this poll
-  if (poll.votes && poll.votes.some((vote) => vote.userId.toString() === userId)) {
-    throw new Error('User has already voted on this poll');
-  }
-
   const option = poll.options.id(optionId);
   if (!option) throw new Error('Option not found');
 
-  option.votes += 1;
-  poll.votes = poll.votes || [];
-  poll.votes.push({ userId, optionId });
+  // Ensure user has not already voted on this option
+  if (option.votes.includes(userId)) {
+    throw new Error('User has already voted on this option');
+  }
 
+  // Push userId into votes array
+  option.votes.push(userId);
   await trip.save();
+  
   return poll;
 };
 
@@ -96,7 +96,7 @@ exports.getPollResults = async (tripId, pollId) => {
 
   return poll.options.map((option) => ({
     text: option.text,
-    votes: option.votes,
+    votes: option.votes.length, // Count the number of votes (user IDs)
   }));
 };
 

@@ -2,9 +2,6 @@ const express = require('express');
 const expenseController = require('../controllers/expenseController');
 const authMiddleware = require('../middlewares/authMiddleware');
 
-console.log('createExpense:', expenseController.createExpense); // Should log function definition or undefined
-console.log('getExpenses:', expenseController.getExpenses); 
-
 const router = express.Router({ mergeParams: true }); // Allows merging URL parameters from parent routes
 
 // Create a new expense
