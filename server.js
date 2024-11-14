@@ -3,7 +3,18 @@ const http = require('http');
 const app = require('./app');
 const dotenv = require('dotenv');
 const socketIo = require('socket.io'); // Socket.IO for real-time features
+const express = require('express');
+const cors = require('cors');
 
+const corsOptions = {
+  origin: 'https://refactored-space-fishstick-r4p5g94vv55jcv57-3000.app.github.dev', // Replace with your frontend URL
+  optionsSuccessStatus: 200
+};
+
+app.use(cors(corsOptions));
+
+// Middleware and route setup
+app.use(express.json());
 dotenv.config();
 
 // Define port

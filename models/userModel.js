@@ -9,6 +9,7 @@ const UserSchema = new Schema({
   refreshToken: { type: String }, // Store refresh token for authentication
   joinedTrips: [{ type: Schema.Types.ObjectId, ref: 'Trip' }], // Trips the user is part of
   invitedTrips: [{ type: Schema.Types.ObjectId, ref: 'Trip' }], // Trips user is invited to
+  profilePicture: String, 
   preferences: {
     receiveNotifications: { type: Boolean, default: true },
     theme: { type: String, enum: ['light', 'dark'], default: 'light' }

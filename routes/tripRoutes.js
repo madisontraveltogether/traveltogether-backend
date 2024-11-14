@@ -28,6 +28,8 @@ router.delete('/:tripId/guests', authMiddleware, tripController.removeGuest);
 router.post('/:tripId/expenses', expenseController.createExpense);
 
 router.get('/', authMiddleware, expenseController.getExpenses);
+router.get('/all', authMiddleware, tripController.getAllUserTrips);
+
 
 router.get('/:tripId/expenses/:expenseId', authMiddleware, expenseController.getExpenseById);
 

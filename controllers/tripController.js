@@ -95,6 +95,25 @@ exports.deleteTrip = async (req, res) => {
   }
 };
 
+exports.getAllUserTrips = async (req, res) => {
+  const userId = req.user.userId; // Assuming user ID is stored in `req.user`
+
+  try {
+    // Find trips where the user is the organizer or a guest
+    const trips = await Trip.find({
+      $or: [
+        { organizer: userId },          // Trips created by the user
+        { guests: userId },             // Trips where the user is a guest
+        { collaborators: userId }       // Trips where the user is a collaborator, if applicable
+      ]
+    });
+
+    res.status(200).json(trips);
+  } catch (error) {
+    res.status(500).json({ message: 'Server error', error: error.message });
+  }
+};
+
 // Add a guest to a trip
 exports.addGuest = async (req, res) => {
   const { tripId } = req.params;

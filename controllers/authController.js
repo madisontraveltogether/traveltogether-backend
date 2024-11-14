@@ -2,6 +2,8 @@ const User = require('../models/userModel');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const config = require('../config/config');
+const multer = require('multer');
+const path = require('path');
 
 // Helper functions to generate tokens
 const generateAccessToken = (userId) => {
@@ -127,6 +129,89 @@ exports.getUser = async (req, res) => {
     res.status(200).json(user);
   } catch (error) {
     console.error("Error fetching user info:", error);
+    res.status(500).json({ message: 'Server error' });
+  }
+};
+
+const storage = multer.diskStorage({
+  destination: (req, file, cb) => {
+    cb(null, 'uploads/profile_pictures'); // Define where to store images
+  },
+  filename: (req, file, cb) => {
+    cb(null, `${req.user.userId}-${Date.now()}${path.extname(file.originalname)}`);
+  },
+});
+
+const upload = multer({ storage });
+
+// Endpoint to upload a profile picture
+exports.uploadProfilePicture = [
+  authMiddleware,
+  upload.single('profilePicture'),
+  async (req, res) => {
+    try {
+      const user = await User.findById(req.user.userId);
+      if (!user) {
+        return res.status(404).json({ message: 'User not found' });
+      }
+
+      // Update user's profile picture path
+      user.profilePicture = req.file.path;
+      await user.save();
+
+      res.status(200).json({ message: 'Profile picture updated successfully', profilePicture: user.profilePicture });
+    } catch (error) {
+      console.error("Error uploading profile picture:", error);
+      res.status(500).json({ message: 'Server error' });
+    }
+  }
+];
+
+exports.updateUserProfile = async (req, res) => {
+  const { name, email } = req.body;
+
+  try {
+    const user = await User.findById(req.user.userId);
+    if (!user) {
+      return res.status(404).json({ message: 'User not found' });
+    }
+
+    if (email) user.email = email;
+    if (name) user.name = name;
+
+    await user.save();
+
+    res.status(200).json({ message: 'Profile updated successfully', user: { name: user.name, email: user.email } });
+  } catch (error) {
+    console.error("Error updating user profile:", error);
+    res.status(500).json({ message: 'Server error' });
+  }
+};
+
+exports.resetPassword = async (req, res) => {
+  const { oldPassword, newPassword } = req.body;
+
+  try {
+    const user = await User.findById(req.user.userId);
+    if (!user) {
+      return res.status(404).json({ message: 'User not found' });
+    }
+
+    // Verify old password
+    const isMatch = await bcrypt.compare(oldPassword, user.password);
+    if (!isMatch) {
+      return res.status(400).json({ message: 'Old password is incorrect' });
+    }
+
+    // Hash new password and update
+    const salt = await bcrypt.genSalt(10);
+    user.password = await bcrypt.hash(newPassword, salt);
+
+    await user.save();
+
+    res.status(200).json({ message: 'Password updated successfully' });
+  } catch (error) {
+    console.error("Error resetting password:", error);
     res.status(500).json({ message: 'Server error' });
   }
 };

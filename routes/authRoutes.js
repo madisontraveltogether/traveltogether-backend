@@ -17,4 +17,12 @@ router.post('/refresh-token', authController.refreshToken); // Public route, but
 // Logout to revoke refresh token
 router.post('/logout', authMiddleware, authController.logout); // Protected route
 
+router.post('/profile/picture', authMiddleware, userController.uploadProfilePicture);
+
+// Update profile name and email
+router.patch('/profile', authMiddleware, userController.updateUserProfile);
+
+// Reset password
+router.patch('/profile/password', authMiddleware, userController.resetPassword);
+
 module.exports = router;
