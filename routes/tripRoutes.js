@@ -4,6 +4,7 @@ const authMiddleware = require('../middlewares/authMiddleware');
 const expenseController = require('../controllers/expenseController');
 const taskController = require('../controllers/taskController');
 const pollController = require('../controllers/pollController');
+const messageController = require('../controllers/messageController');
 
 const router = express.Router();
 
@@ -69,6 +70,11 @@ router.post('/:tripId/polls/:pollId/options/:optionId/vote', authMiddleware, pol
 router.get('/:tripId/polls/:pollId/results', authMiddleware, pollController.getPollResults);
 
 router.post('/:tripId/collaborators', authMiddleware, tripController.addCollaborator);
+
+router.post('/:tripId/messages', authMiddleware, messageController.sendMessage);
+
+// Route to get all messages for a trip
+router.get('/:tripId/messages', authMiddleware, messageController.getMessages);
 
 
 module.exports = router;

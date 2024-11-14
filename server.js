@@ -53,6 +53,13 @@ io.on('connection', (socket) => {
   socket.on('disconnect', () => {
     console.log('Client disconnected:', socket.id);
   });
+  socket.on('sendMessage', (message) => {
+    io.to(message.tripId).emit('receiveMessage', message);
+  });
+
+  socket.on('disconnect', () => {
+    console.log('Client disconnected');
+  });
 });
 
 // Start the server
