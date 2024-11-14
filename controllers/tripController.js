@@ -2,6 +2,32 @@
 const mongoose = require('mongoose');
 const Trip = require('../models/tripModel');
 const User = require('../models/userModel');
+const multer = require('multer');
+const path = require('path');
+
+const storage = multer.diskStorage({
+  destination: (req, file, cb) => {
+    cb(null, 'uploads/trip_covers'); // Define where to store images
+  },
+  filename: (req, file, cb) => {
+    cb(null, `${Date.now()}-${file.originalname}`);
+  },
+});
+
+const upload = multer({
+  storage,
+  fileFilter: (req, file, cb) => {
+    const fileTypes = /jpeg|jpg|png|gif/;
+    const extname = fileTypes.test(path.extname(file.originalname).toLowerCase());
+    const mimetype = fileTypes.test(file.mimetype);
+
+    if (mimetype && extname) {
+      return cb(null, true);
+    } else {
+      cb('Error: Images Only!');
+    }
+  },
+});
 
 // Create a new trip
 exports.createTrip = async (req, res) => {
@@ -18,7 +44,15 @@ exports.createTrip = async (req, res) => {
       endDate,
       privacy,
       organizer,
+      coverImage: req.file ? `/uploads/trip_covers/${req.file.filename}` : null, // Save image path if uploaded
     });
+
+    if (guests && Array.isArray(guests)) {
+      trip.guests = guests;
+    }
+    if (collaborators && Array.isArray(collaborators)) {
+      trip.collaborators = collaborators;
+    }
 
     await trip.save();
 

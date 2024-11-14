@@ -12,6 +12,8 @@ const corsOptions = {
 };
 
 app.use(cors(corsOptions));
+app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
+
 
 // Middleware and route setup
 app.use(express.json());
