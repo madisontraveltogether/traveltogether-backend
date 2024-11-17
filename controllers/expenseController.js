@@ -221,15 +221,15 @@ exports.deleteExpense = async (req, res) => {
 
 exports.updateExpense = async (req, res) => {
   const { tripId, expenseId } = req.params;
-  const updateData = req.body; // Contains fields to update
+  const updateData = req.body;
+
+  console.log('Update request received:', { tripId, expenseId, updateData });
 
   try {
-    // Validate the IDs
     if (!mongoose.Types.ObjectId.isValid(tripId) || !mongoose.Types.ObjectId.isValid(expenseId)) {
       return res.status(400).json({ message: 'Invalid trip ID or expense ID format' });
     }
 
-    // Find the trip and ensure the expense exists
     const trip = await Trip.findById(tripId);
     if (!trip) {
       return res.status(404).json({ message: 'Trip not found' });
@@ -240,13 +240,13 @@ exports.updateExpense = async (req, res) => {
       return res.status(404).json({ message: 'Expense not found' });
     }
 
-    // Update the specified fields in the expense
     Object.keys(updateData).forEach((key) => {
       expense[key] = updateData[key];
     });
 
-    // Save the trip document
     await trip.save();
+
+    console.log('Expense updated:', expense);
 
     res.status(200).json({ message: 'Expense updated successfully', expense });
   } catch (error) {
@@ -254,7 +254,6 @@ exports.updateExpense = async (req, res) => {
     res.status(500).json({ message: 'Server error', error: error.message });
   }
 };
-
 
 exports.addComment = async (req, res) => {
   const { tripId, expenseId } = req.params;
