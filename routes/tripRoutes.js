@@ -43,7 +43,7 @@ router.get('/:tripId/expenses', authMiddleware, expenseController.getExpenses);
 router.get('/:tripId/expenses/:expenseId', authMiddleware, expenseController.getExpenseById);
 router.put('/:tripId/expenses/:expenseId', authMiddleware, expenseController.updateExpense);
 router.delete('/:tripId/expenses/:expenseId', authMiddleware, expenseController.deleteExpense);
-router.get('/:tripId/balances', authMiddleware, tripController.getBalances);
+router.get('/:tripId/balances', authMiddleware, expenseController.getBalances);
 
 /**
  * Task Routes
