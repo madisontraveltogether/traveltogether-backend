@@ -148,10 +148,6 @@ exports.getAllUserTrips = async (req, res) => {
   }
 };
 
-// Add a guest to a trip
-const mongoose = require('mongoose');
-const Trip = require('../models/tripModel');
-const User = require('../models/userModel');
 
 // Helper function to validate Object IDs
 const validateObjectId = (id) => mongoose.isValidObjectId(id);
