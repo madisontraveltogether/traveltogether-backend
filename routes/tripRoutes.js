@@ -20,11 +20,11 @@ const router = express.Router();
 /**
  * Trip Routes
  */
-router.post('/', authMiddleware, tripController.createTrip);
+router.get('/all', authMiddleware, tripController.getAllUserTrips);
 router.get('/:tripId', authMiddleware, tripController.getTripById);
 router.patch('/:tripId', authMiddleware, tripController.updateTrip);
 router.delete('/:tripId', authMiddleware, tripController.deleteTrip);
-router.get('/all', authMiddleware, tripController.getAllUserTrips);
+router.post('/', authMiddleware, tripController.createTrip);
 
 /**
  * Guest Routes
