@@ -16,9 +16,6 @@ const { authenticateUser } = require('../middlewares/authMiddleware');
 
 const router = express.Router();
 
-/** Role Routes */
- 
-router.post('/:tripId/expenses', authenticateUser, ensureTripMember, tripController.addExpense);
 
 /**
  * Trip Routes
