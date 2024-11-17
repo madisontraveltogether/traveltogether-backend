@@ -24,6 +24,6 @@ router.post('/profile/picture', authMiddleware, userController.uploadProfilePict
 router.patch('/profile', authMiddleware, userController.updateUserProfile);
 
 // Reset password
-router.patch('/profile/password', authMiddleware, userController.forgotPassword);
+router.patch('/profile/password', authMiddleware, userController.resetPassword);
 
 module.exports = router;
