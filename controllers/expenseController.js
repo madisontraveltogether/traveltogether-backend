@@ -8,7 +8,7 @@ exports.createExpense = async (req, res) => {
 
   try {
     // Validate required fields
-    if (!title || !amount || !payer || !splitType || !splitWith) {
+    if (!title || !amount || !payer) {
       return res.status(400).json({ message: 'Missing required fields' });
     }
 
@@ -17,24 +17,29 @@ exports.createExpense = async (req, res) => {
       return res.status(404).json({ message: 'Trip not found' });
     }
 
-    // Perform split calculations
+    // Perform split calculations if splitType and splitWith are provided
     let calculatedSplitWith = [];
-    switch (splitType) {
-      case 'even':
-        calculatedSplitWith = calculateEvenSplit(amount, splitWith);
-        break;
-      case 'byAmount':
-        validateTotalSplit(amount, splitWith);
-        calculatedSplitWith = splitWith; // Already validated
-        break;
-      case 'byPercentage':
-        calculatedSplitWith = calculatePercentageSplit(amount, splitWith);
-        break;
-      case 'byShares':
-        calculatedSplitWith = calculateShareSplit(amount, splitWith);
-        break;
-      default:
-        return res.status(400).json({ message: 'Invalid split type' });
+    if (splitType && splitWith) {
+      switch (splitType) {
+        case 'even':
+          calculatedSplitWith = calculateEvenSplit(amount, splitWith);
+          break;
+        case 'byAmount':
+          validateTotalSplit(amount, splitWith);
+          calculatedSplitWith = splitWith; // Already validated
+          break;
+        case 'byPercentage':
+          calculatedSplitWith = calculatePercentageSplit(amount, splitWith);
+          break;
+        case 'byShares':
+          calculatedSplitWith = calculateShareSplit(amount, splitWith);
+          break;
+        default:
+          return res.status(400).json({ message: 'Invalid split type' });
+      }
+    } else {
+      // If no splitType or splitWith, the payer takes on the full expense
+      calculatedSplitWith = [{ userId: payer, amount }];
     }
 
     // Create the expense
@@ -42,10 +47,10 @@ exports.createExpense = async (req, res) => {
       title,
       amount,
       payer,
-      splitType,
+      splitType: splitType || 'self', // Default to 'self' when no split
       splitWith: calculatedSplitWith,
-      date,
-      description,
+      date: date || new Date(), // Default to current date
+      description: description || '', // Default to empty description
     };
 
     // Add the expense to the trip
@@ -58,6 +63,7 @@ exports.createExpense = async (req, res) => {
     res.status(500).json({ message: 'Server error', error: error.message });
   }
 };
+
 
 exports.getExpenses = async (req, res) => {
   const { tripId } = req.params;
