@@ -31,22 +31,23 @@ const upload = multer({
 
 // Create a new trip
 exports.createTrip = async (req, res) => {
-  const { name, location, description, startDate, endDate, privacy } = req.body;
+  const { name, location, description, startDate, endDate, privacy, guests, collaborators } = req.body;
   const organizer = req.user.userId; // The user ID from the token
 
   try {
-    // Create a new trip
+    // Create a new trip with optional fields
     const trip = new Trip({
       name,
-      location,
-      description,
-      startDate,
-      endDate,
-      privacy,
+      location: location || null, // Default to null if not provided
+      description: description || '', // Default to an empty string if not provided
+      startDate: startDate || null, // Default to null if not provided
+      endDate: endDate || null, // Default to null if not provided
+      privacy: privacy || 'private', // Default to 'private' if not provided
       organizer,
       coverImage: req.file ? `/uploads/trip_covers/${req.file.filename}` : null, // Save image path if uploaded
     });
 
+    // Add guests and collaborators if provided
     if (guests && Array.isArray(guests)) {
       trip.guests = guests;
     }
@@ -59,15 +60,17 @@ exports.createTrip = async (req, res) => {
     // Update the user's joinedTrips array with the new trip ID
     await User.findByIdAndUpdate(
       organizer,
-      { $push: { joinedTrips: tripId } },
+      { $push: { joinedTrips: trip._id } },
       { new: true }
     );
 
     res.status(201).json(trip);
   } catch (error) {
+    console.error('Error creating trip:', error);
     res.status(500).json({ message: 'Server error', error: error.message });
   }
 };
+
 
 exports.getTripById = async (req, res) => {
   const { tripId } = req.params;

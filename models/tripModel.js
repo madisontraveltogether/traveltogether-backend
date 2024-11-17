@@ -92,29 +92,28 @@ const GuestSchema = new Schema({
 
 // Main Trip Schema
 const TripSchema = new Schema({
-
   name: { type: String, required: true },
-  location: String,
-  description: String,
+  location: { type: String, default: null }, // Optional field
+  description: { type: String, default: '' }, // Optional field
   organizer: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
-  guests: [GuestSchema],  
-  collaborators: [{ type: Schema.Types.ObjectId, ref: 'User' }], // Users with edit permissions
-  startDate: Date,
-  endDate: Date,
+  guests: [GuestSchema], // Optional by default due to array nature
+  collaborators: [{ type: Schema.Types.ObjectId, ref: 'User' }], // Optional field
+  startDate: { type: Date, default: null }, // Optional field
+  endDate: { type: Date, default: null }, // Optional field
   privacy: { type: String, enum: ['public', 'private'], default: 'private' },
   tripType: { type: String, enum: ['vacation', 'business', 'family', 'adventure'], default: 'vacation' },
-  coverImage: String,
-  announcements: [AnnouncementSchema],
+  coverImage: { type: String, default: null }, // Optional field
+  announcements: [AnnouncementSchema], // Optional by default
   createdAt: { type: Date, default: Date.now },
-  expenses: [ExpenseSchema],   // Embedded expenses
-  itinerary: [ItineraryItemSchema],  // Embedded itinerary items
-  tasks: [TaskSchema],         // Embedded tasks
-  polls: [PollSchema],         // Embedded polls
+  expenses: [ExpenseSchema], // Optional by default
+  itinerary: [ItineraryItemSchema], // Optional by default
+  tasks: [TaskSchema], // Optional by default
+  polls: [PollSchema], // Optional by default
   settings: {
     isPrivate: { type: Boolean, default: false },
     notificationsEnabled: { type: Boolean, default: true },
     customTheme: { type: String, default: 'default' },
-    maxGuests: { type: Number, default: 50 }
+    maxGuests: { type: Number, default: 50 },
   },
 });
 
