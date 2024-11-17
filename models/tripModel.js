@@ -7,7 +7,11 @@ const ExpenseSchema = new mongoose.Schema(
     title: { type: String, required: true },
     amount: { type: Number, required: true },
     payer: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
-    splitType: { type: String, enum: ['even', 'byAmount', 'byPercentage', 'byShares'], required: true },
+    splitType: { 
+      type: String, 
+      enum: ['even', 'byAmount', 'byPercentage', 'byShares', 'self'], // Added 'self' as a valid option
+      default: 'self', // Defaults to 'self' if not provided
+    },
     splitWith: [
       {
         user: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
@@ -15,7 +19,7 @@ const ExpenseSchema = new mongoose.Schema(
       },
     ],
     date: { type: Date, default: Date.now },
-    description: { type: String },
+    description: { type: String, default: '' }, // Default to an empty string if not provided
     comments: [
       {
         user: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
@@ -28,6 +32,7 @@ const ExpenseSchema = new mongoose.Schema(
   },
   { timestamps: true }
 );
+
 
 
 // Itinerary Item Subdocument Schema
