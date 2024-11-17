@@ -133,19 +133,16 @@ exports.deleteTrip = async (req, res) => {
 };
 
 exports.getAllUserTrips = async (req, res) => {
-  const userId = req.user.userId; // Assuming user ID is stored in `req.user`
+  const userId = req.user.userId; // Assuming `userId` is available in `req.user`
 
   try {
-    // Convert userId to ObjectId
-    const userObjectId = mongoose.Types.ObjectId(userId);
-
-    // Find trips where the user is the organizer, a guest, or a collaborator
+    // Find trips where the user is an organizer, guest, or collaborator
     const trips = await Trip.find({
       $or: [
-        { organizer: userObjectId },     // Trips created by the user
-        { 'guests.userId': userObjectId }, // Assuming guests is an array of embedded documents
-        { collaborators: userObjectId }  // Trips where the user is a collaborator
-      ]
+        { organizer: userId },              // User is the organizer
+        { 'guests.userId': userId },        // User is in guests (nested field)
+        { collaborators: userId },         // User is a collaborator
+      ],
     });
 
     res.status(200).json(trips);
@@ -154,7 +151,6 @@ exports.getAllUserTrips = async (req, res) => {
     res.status(500).json({ message: 'Server error', error: error.message });
   }
 };
-
 
 // Helper function to validate Object IDs
 const validateObjectId = (id) => mongoose.isValidObjectId(id);
