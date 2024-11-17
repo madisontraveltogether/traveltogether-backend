@@ -136,17 +136,21 @@ exports.getAllUserTrips = async (req, res) => {
   const userId = req.user.userId; // Assuming user ID is stored in `req.user`
 
   try {
-    // Find trips where the user is the organizer or a guest
+    // Convert userId to ObjectId
+    const userObjectId = mongoose.Types.ObjectId(userId);
+
+    // Find trips where the user is the organizer, a guest, or a collaborator
     const trips = await Trip.find({
       $or: [
-        { organizer: userId },          // Trips created by the user
-        { guests: userId },             // Trips where the user is a guest
-        { collaborators: userId }       // Trips where the user is a collaborator, if applicable
+        { organizer: userObjectId },     // Trips created by the user
+        { 'guests.userId': userObjectId }, // Assuming guests is an array of embedded documents
+        { collaborators: userObjectId }  // Trips where the user is a collaborator
       ]
     });
 
     res.status(200).json(trips);
   } catch (error) {
+    console.error('Error fetching user trips:', error);
     res.status(500).json({ message: 'Server error', error: error.message });
   }
 };
