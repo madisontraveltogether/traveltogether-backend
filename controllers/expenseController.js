@@ -75,6 +75,161 @@ exports.getExpenses = async (req, res) => {
   }
 };
 
+exports.getBalances = async (req, res) => {
+  const { tripId } = req.params;
+
+  try {
+    const trip = await Trip.findById(tripId).populate('expenses.payer expenses.splitWith.user guests.user', 'name');
+    if (!trip) {
+      return res.status(404).json({ message: 'Trip not found' });
+    }
+
+    // Calculate balances
+    const balances = {};
+    const summary = [];
+
+    trip.expenses.forEach((expense) => {
+      const payerId = expense.payer.toString();
+      if (!balances[payerId]) balances[payerId] = 0;
+      balances[payerId] += expense.amount;
+
+      expense.splitWith.forEach((split) => {
+        const userId = split.user.toString();
+        if (!balances[userId]) balances[userId] = 0;
+        balances[userId] -= split.amount;
+
+        // Add to summary for "who owes whom"
+        if (userId !== payerId) {
+          summary.push({
+            from: split.user.name,
+            to: expense.payer.name,
+            amount: split.amount,
+          });
+        }
+      });
+    });
+
+    // Convert balances to an array with user details
+    const balanceArray = await Promise.all(
+      Object.entries(balances).map(async ([userId, amount]) => {
+        const user = await User.findById(userId).select('name');
+        return { user, amount };
+      })
+    );
+
+    res.status(200).json({ balances: balanceArray, summary });
+  } catch (error) {
+    console.error('Error fetching balances:', error);
+    res.status(500).json({ message: 'Server error', error: error.message });
+  }
+};
+
+const { parse } = require('json2csv');
+
+exports.exportBalances = async (req, res) => {
+  const { tripId } = req.params;
+
+  try {
+    const trip = await Trip.findById(tripId).populate('expenses.payer expenses.splitWith.user guests.user', 'name');
+    if (!trip) {
+      return res.status(404).json({ message: 'Trip not found' });
+    }
+
+    // Calculate balances
+    const balances = {};
+    trip.expenses.forEach((expense) => {
+      const payerId = expense.payer.toString();
+      if (!balances[payerId]) balances[payerId] = 0;
+      balances[payerId] += expense.amount;
+
+      expense.splitWith.forEach((split) => {
+        const userId = split.user.toString();
+        if (!balances[userId]) balances[userId] = 0;
+        balances[userId] -= split.amount;
+      });
+    });
+
+    const balanceArray = await Promise.all(
+      Object.entries(balances).map(async ([userId, amount]) => {
+        const user = await User.findById(userId).select('name');
+        return { name: user.name, balance: amount };
+      })
+    );
+
+    const csv = parse(balanceArray);
+    res.header('Content-Type', 'text/csv');
+    res.attachment('trip_balances.csv');
+    res.send(csv);
+  } catch (error) {
+    console.error('Error exporting balances:', error);
+    res.status(500).json({ message: 'Server error', error: error.message });
+  }
+};
+
+exports.deleteExpense = async (req, res) => {
+  const { tripId, expenseId } = req.params;
+
+  try {
+    const trip = await Trip.findById(tripId);
+    if (!trip) {
+      return res.status(404).json({ message: 'Trip not found' });
+    }
+
+    const expense = trip.expenses.id(expenseId);
+    if (!expense) {
+      return res.status(404).json({ message: 'Expense not found' });
+    }
+
+    // Remove the expense
+    expense.remove();
+    await trip.save();
+
+    res.status(200).json({ message: 'Expense deleted successfully' });
+  } catch (error) {
+    console.error('Error deleting expense:', error);
+    res.status(500).json({ message: 'Server error', error: error.message });
+  }
+};
+
+exports.updateExpense = async (req, res) => {
+  const { tripId, expenseId } = req.params;
+  const { title, amount, payer, splitType, splitWith, date, description } = req.body;
+
+  try {
+    // Validate required fields
+    if (!title || !amount || !payer || !splitType || !splitWith) {
+      return res.status(400).json({ message: 'Missing required fields' });
+    }
+
+    const trip = await Trip.findById(tripId);
+    if (!trip) {
+      return res.status(404).json({ message: 'Trip not found' });
+    }
+
+    const expense = trip.expenses.id(expenseId);
+    if (!expense) {
+      return res.status(404).json({ message: 'Expense not found' });
+    }
+
+    // Update expense details
+    expense.title = title;
+    expense.amount = amount;
+    expense.payer = payer;
+    expense.splitType = splitType;
+    expense.splitWith = splitWith;
+    expense.date = date || expense.date;
+    expense.description = description || expense.description;
+
+    await trip.save();
+
+    res.status(200).json({ message: 'Expense updated successfully', expense });
+  } catch (error) {
+    console.error('Error updating expense:', error);
+    res.status(500).json({ message: 'Server error', error: error.message });
+  }
+};
+
+
 exports.addComment = async (req, res) => {
   const { tripId, expenseId } = req.params;
   const { content } = req.body;
