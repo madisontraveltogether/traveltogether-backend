@@ -51,7 +51,7 @@ router.get('/:tripId/balances', authMiddleware, expenseController.getBalances);
 router.post('/:tripId/tasks', authMiddleware, taskController.createTask);
 router.get('/:tripId/tasks', authMiddleware, taskController.getTasks);
 router.get('/:tripId/tasks/:taskId', authMiddleware, taskController.getTaskDetails);
-router.put('/:tripId/tasks/:taskId', authMiddleware, taskController.updateTask);
+router.patch('/:tripId/tasks/:taskId', authMiddleware, taskController.updateTask);
 router.patch('/:tripId/tasks/:taskId/status', authMiddleware, taskController.updateTaskStatus);
 router.patch('/:tripId/tasks/:taskId/assign', authMiddleware, taskController.assignTask);
 router.delete('/:tripId/tasks/:taskId', authMiddleware, taskController.deleteTask);
