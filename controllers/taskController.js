@@ -3,28 +3,47 @@ const taskService = require('../services/taskService');
 const io = require('../server').io;
 const Trip = require('../models/tripModel');
 
-// Create a new task for a specific trip
-exports.createTask = async (tripId, { title, description, assignedTo, dueDate, priority, isRecurring }) => {
-  const trip = await Trip.findById(tripId);
-  if (!trip) throw new Error('Trip not found');
+let io;
 
-  // Validate assigned users
-  const validUsers = trip.guests.concat(trip.collaborators, trip.organizer.toString());
-  if (assignedTo) {
-    assignedTo.forEach((user) => {
-      if (!validUsers.includes(user.toString())) {
-        throw new Error(`User ${user} is not part of this trip`);
-      }
-    });
-  }
-
-  const task = { title, description, assignedTo, dueDate, priority, isRecurring, status: 'pending' };
-  trip.tasks.push(task);
-  await trip.save();
-  io.to(tripId).emit('taskCreated', task);
-
-  return task;
+exports.setSocket = (socketInstance) => {
+  io = socketInstance;
 };
+
+
+// Create a new task for a specific trip
+exports.createTask = async (req, res) => {
+  const { tripId } = req.params;
+  const { title, description, assignedTo, dueDate, priority, isRecurring } = req.body;
+
+  try {
+    const trip = await Trip.findById(tripId);
+    if (!trip) {
+      return res.status(404).json({ message: 'Trip not found' });
+    }
+
+    // Validate assigned users
+    const validUsers = trip.guests.concat(trip.collaborators, trip.organizer.toString());
+    if (assignedTo) {
+      assignedTo.forEach((user) => {
+        if (!validUsers.includes(user.toString())) {
+          throw new Error(`User ${user} is not part of this trip`);
+        }
+      });
+    }
+
+    const task = { title, description, assignedTo, dueDate, priority, isRecurring, status: 'pending' };
+    trip.tasks.push(task);
+    await trip.save();
+
+    io.to(tripId).emit('taskCreated', task);
+
+    res.status(201).json(task);
+  } catch (error) {
+    console.error('Error creating task:', error);
+    res.status(500).json({ message: 'Server error', error: error.message });
+  }
+};
+
 
 // Get all tasks for a specific trip
 exports.getTasks = async (req, res) => {
