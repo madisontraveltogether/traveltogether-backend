@@ -1,7 +1,7 @@
 // controllers/taskController.js
 const taskService = require('../services/taskService');
 const io = require('../server').io;
-
+const Trip = require('../models/tripModel');
 
 // Create a new task for a specific trip
 exports.createTask = async (tripId, { title, description, assignedTo, dueDate, priority, isRecurring }) => {
