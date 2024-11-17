@@ -75,6 +75,28 @@ exports.getExpenses = async (req, res) => {
   }
 };
 
+exports.getExpenseById = async (req, res) => {
+  const { tripId, expenseId } = req.params;
+
+  try {
+    const trip = await Trip.findById(tripId);
+    if (!trip) {
+      return res.status(404).json({ message: 'Trip not found' });
+    }
+
+    const expense = trip.expenses.id(expenseId);
+    if (!expense) {
+      return res.status(404).json({ message: 'Expense not found' });
+    }
+
+    res.status(200).json(expense);
+  } catch (error) {
+    console.error('Error fetching expense:', error);
+    res.status(500).json({ message: 'Server error', error: error.message });
+  }
+};
+
+
 exports.getBalances = async (req, res) => {
   const { tripId } = req.params;
 
