@@ -15,6 +15,8 @@ const generateRefreshToken = (userId) => {
   return jwt.sign({ userId }, config.jwtSecret, { expiresIn: '7d' });
 };
 
+
+
 // Register a new user
 exports.register = async (req, res) => {
   const { name, email, password } = req.body;
@@ -215,15 +217,4 @@ exports.resetPassword = async (req, res) => {
     console.error("Error resetting password:", error);
     res.status(500).json({ message: 'Server error' });
   }
-};
-
-module.exports = {
-  register,
-  login,
-  refreshToken,
-  logout,
-  getUser,
-  uploadProfilePicture,
-  updateUserProfile,
-  resetPassword,
 };
