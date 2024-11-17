@@ -1,6 +1,5 @@
 // controllers/taskController.js
 const taskService = require('../services/taskService');
-const io = require('../server').io;
 const Trip = require('../models/tripModel');
 
 let io;
