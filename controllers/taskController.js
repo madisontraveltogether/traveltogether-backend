@@ -129,10 +129,27 @@ exports.deleteTask = async (req, res) => {
   const { tripId, taskId } = req.params;
 
   try {
-    await taskService.deleteTask(tripId, taskId);
+    const trip = await Trip.findById(tripId);
+    if (!trip) {
+      return res.status(404).json({ message: 'Trip not found' });
+    }
+
+    // Find the index of the task to delete
+    const taskIndex = trip.tasks.findIndex((task) => task._id.toString() === taskId);
+    if (taskIndex === -1) {
+      return res.status(404).json({ message: 'Task not found' });
+    }
+
+    // Remove the task from the array
+    trip.tasks.splice(taskIndex, 1);
+
+    // Save the updated trip document
+    await trip.save();
+
     res.status(200).json({ message: 'Task deleted successfully' });
   } catch (error) {
     console.error('Error deleting task:', error);
     res.status(500).json({ message: 'Server error', error: error.message });
   }
 };
+
