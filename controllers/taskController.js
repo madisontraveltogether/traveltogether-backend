@@ -8,7 +8,6 @@ exports.setSocket = (socketInstance) => {
   io = socketInstance;
 };
 
-
 // Create a new task for a specific trip
 exports.createTask = async (req, res) => {
   const { tripId } = req.params;
@@ -34,7 +33,11 @@ exports.createTask = async (req, res) => {
     trip.tasks.push(task);
     await trip.save();
 
-    io.to(tripId).emit('taskCreated', task);
+    if (io) {
+      io.to(tripId).emit('taskCreated', task);
+    } else {
+      console.error('Socket.io is not initialized');
+    }
 
     res.status(201).json(task);
   } catch (error) {

@@ -31,6 +31,8 @@ const io = socketIo(server, {
     methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH'], // Add PATCH for compatibility
   },
 });
+const taskController = require('./controllers/taskController');
+taskController.setSocket(io);
 
 // WebSocket logic
 io.on('connection', (socket) => {
