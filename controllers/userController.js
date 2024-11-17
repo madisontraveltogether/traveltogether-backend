@@ -4,6 +4,8 @@ const jwt = require('jsonwebtoken');
 const bcrypt = require('bcrypt');
 const { JWT_SECRET, JWT_REFRESH_SECRET } = process.env;
 const authMiddleware = require("../middlewares/authMiddleware");
+const multer = require('multer');
+
 
 // Update user preferences
 exports.updatePreferences = async (req, res) => {

@@ -2,7 +2,6 @@ const User = require('../models/userModel');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const config = require('../config/config');
-const multer = require('multer');
 const path = require('path');
 const authMiddleware = require('../middlewares/authMiddleware');
 
