@@ -221,14 +221,15 @@ exports.deleteExpense = async (req, res) => {
 
 exports.updateExpense = async (req, res) => {
   const { tripId, expenseId } = req.params;
-  const { title, amount, payer, splitType, splitWith, date, description } = req.body;
+  const updateData = req.body; // Contains fields to update
 
   try {
-    // Validate required fields
-    if (!title || !amount || !payer || !splitType || !splitWith) {
-      return res.status(400).json({ message: 'Missing required fields' });
+    // Validate the IDs
+    if (!mongoose.Types.ObjectId.isValid(tripId) || !mongoose.Types.ObjectId.isValid(expenseId)) {
+      return res.status(400).json({ message: 'Invalid trip ID or expense ID format' });
     }
 
+    // Find the trip and ensure the expense exists
     const trip = await Trip.findById(tripId);
     if (!trip) {
       return res.status(404).json({ message: 'Trip not found' });
@@ -239,15 +240,12 @@ exports.updateExpense = async (req, res) => {
       return res.status(404).json({ message: 'Expense not found' });
     }
 
-    // Update expense details
-    expense.title = title;
-    expense.amount = amount;
-    expense.payer = payer;
-    expense.splitType = splitType;
-    expense.splitWith = splitWith;
-    expense.date = date || expense.date;
-    expense.description = description || expense.description;
+    // Update the specified fields in the expense
+    Object.keys(updateData).forEach((key) => {
+      expense[key] = updateData[key];
+    });
 
+    // Save the trip document
     await trip.save();
 
     res.status(200).json({ message: 'Expense updated successfully', expense });
