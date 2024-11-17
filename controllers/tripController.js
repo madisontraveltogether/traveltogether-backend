@@ -149,123 +149,255 @@ exports.getAllUserTrips = async (req, res) => {
 };
 
 // Add a guest to a trip
+const mongoose = require('mongoose');
+const Trip = require('../models/tripModel');
+const User = require('../models/userModel');
+
+// Helper function to validate Object IDs
+const validateObjectId = (id) => mongoose.isValidObjectId(id);
+
+// **Add Guest**
 exports.addGuest = async (req, res) => {
   const { tripId } = req.params;
-  const { guestId } = req.body;
+  const { guestId, rsvpStatus = 'pending', role = 'guest', notes = '' } = req.body;
 
-  // Validate the ID format
-  if (!mongoose.isValidObjectId(tripId) || !mongoose.isValidObjectId(guestId)) {
+  if (!validateObjectId(tripId) || !validateObjectId(guestId)) {
     return res.status(400).json({ message: 'Invalid ID format' });
   }
 
   try {
     const trip = await Trip.findById(tripId);
-    if (!trip) {
-      return res.status(404).json({ message: 'Trip not found' });
-    }
+    if (!trip) return res.status(404).json({ message: 'Trip not found' });
 
-    // Check if the guest is already in the list
-    if (trip.guests.includes(guestId)) {
+    const user = await User.findById(guestId);
+    if (!user) return res.status(404).json({ message: 'User not found' });
+
+    // Check for duplicate guest
+    if (trip.guests.some((guest) => guest.user.equals(guestId))) {
       return res.status(400).json({ message: 'Guest already added' });
     }
 
-    trip.guests.push(guestId);
+    trip.guests.push({ user: guestId, rsvpStatus, role, notes });
     await trip.save();
 
-    res.status(200).json(trip);
+    await trip.populate('guests.user', 'name email').execPopulate();
+
+    res.status(200).json({ message: 'Guest added successfully', guests: trip.guests });
   } catch (error) {
+    console.error('Error adding guest:', error);
     res.status(500).json({ message: 'Server error', error: error.message });
   }
 };
 
-// Remove a guest from a trip
+// **Remove Guest**
 exports.removeGuest = async (req, res) => {
   const { tripId } = req.params;
   const { guestId } = req.body;
 
-  // Validate the ID format
-  if (!mongoose.isValidObjectId(tripId) || !mongoose.isValidObjectId(guestId)) {
+  if (!validateObjectId(tripId) || !validateObjectId(guestId)) {
     return res.status(400).json({ message: 'Invalid ID format' });
   }
 
   try {
     const trip = await Trip.findById(tripId);
-    if (!trip) {
-      return res.status(404).json({ message: 'Trip not found' });
+    if (!trip) return res.status(404).json({ message: 'Trip not found' });
+
+    const initialGuestCount = trip.guests.length;
+    trip.guests = trip.guests.filter((guest) => !guest.user.equals(guestId));
+
+    if (initialGuestCount === trip.guests.length) {
+      return res.status(404).json({ message: 'Guest not found in the trip' });
     }
 
-    // Remove the guest from the list
-    trip.guests = trip.guests.filter(id => id.toString() !== guestId.toString());
     await trip.save();
-
-    res.status(200).json(trip);
+    res.status(200).json({ message: 'Guest removed successfully', guests: trip.guests });
   } catch (error) {
+    console.error('Error removing guest:', error);
     res.status(500).json({ message: 'Server error', error: error.message });
   }
 };
 
-exports.addCollaborator = async (req, res) => {
+// **Get Guest List**
+exports.getGuestList = async (req, res) => {
   const { tripId } = req.params;
-  const { userId } = req.body; // Assuming the collaborator's ID is sent in the request body
+
+  if (!validateObjectId(tripId)) {
+    return res.status(400).json({ message: 'Invalid ID format' });
+  }
+
+  try {
+    const trip = await Trip.findById(tripId).populate('guests.user', 'name email');
+    if (!trip) return res.status(404).json({ message: 'Trip not found' });
+
+    res.status(200).json(trip.guests);
+  } catch (error) {
+    console.error('Error fetching guest list:', error);
+    res.status(500).json({ message: 'Server error', error: error.message });
+  }
+};
+
+// **Invite User to Trip**
+exports.inviteUserToTrip = async (req, res) => {
+  const { tripId, userId } = req.params;
+
+  if (!validateObjectId(tripId) || !validateObjectId(userId)) {
+    return res.status(400).json({ message: 'Invalid ID format' });
+  }
 
   try {
     const trip = await Trip.findById(tripId);
-    if (!trip) {
-      return res.status(404).json({ message: 'Trip not found' });
+    const user = await User.findById(userId);
+
+    if (!trip || !user) return res.status(404).json({ message: 'Trip or user not found' });
+
+    // Add user to the guest list if not already present
+    if (!trip.guests.some((guest) => guest.user.equals(userId))) {
+      trip.guests.push({ user: userId, rsvpStatus: 'pending', role: 'guest' });
     }
 
-    // Check if the user is already a collaborator
+    // Add trip to user's invited trips if not already present
+    if (!user.invitedTrips.includes(tripId)) {
+      user.invitedTrips.push(tripId);
+    }
+
+    await Promise.all([trip.save(), user.save()]);
+
+    res.status(200).json({ message: 'User invited successfully', trip, user });
+  } catch (error) {
+    console.error('Error inviting user to trip:', error);
+    res.status(500).json({ message: 'Server error', error: error.message });
+  }
+};
+
+// **Get Invited Trips for a User**
+exports.getInvitedTrips = async (req, res) => {
+  const userId = req.user.userId; // Assuming authenticated user
+
+  try {
+    const user = await User.findById(userId).populate('invitedTrips', 'title description');
+    if (!user) return res.status(404).json({ message: 'User not found' });
+
+    res.status(200).json(user.invitedTrips);
+  } catch (error) {
+    console.error('Error fetching invited trips:', error);
+    res.status(500).json({ message: 'Server error', error: error.message });
+  }
+};
+
+// **Add Collaborator**
+exports.addCollaborator = async (req, res) => {
+  const { tripId } = req.params;
+  const { userId } = req.body;
+
+  if (!validateObjectId(tripId) || !validateObjectId(userId)) {
+    return res.status(400).json({ message: 'Invalid ID format' });
+  }
+
+  try {
+    const trip = await Trip.findById(tripId);
+    if (!trip) return res.status(404).json({ message: 'Trip not found' });
+
     if (trip.collaborators.includes(userId)) {
       return res.status(400).json({ message: 'User is already a collaborator' });
     }
 
-    // Add collaborator
     trip.collaborators.push(userId);
     await trip.save();
 
     res.status(200).json({ message: 'Collaborator added successfully', trip });
   } catch (error) {
+    console.error('Error adding collaborator:', error);
     res.status(500).json({ message: 'Server error', error: error.message });
   }
 };
 
-exports.inviteUserToTrip = async (req, res) => {
-  const { tripId, userId } = req.params;
+exports.getBalances = async (req, res) => {
+  const { tripId } = req.params;
 
   try {
-    // Find trip and user
-    const trip = await Trip.findById(tripId);
-    const user = await User.findById(userId);
-
-    if (!trip || !user) {
-      return res.status(404).json({ message: 'Trip or user not found' });
+    const trip = await Trip.findById(tripId).populate('expenses.payer expenses.splitWith.user guests.user', 'name');
+    if (!trip) {
+      return res.status(404).json({ message: 'Trip not found' });
     }
 
-    // Add the user to the trip's guest list
-    trip.guests.push(userId);
-    await trip.save();
+    // Calculate balances
+    const balances = {};
+    const summary = [];
 
-    // Add the trip to the user's invited trips list
-    user.invitedTrips.push(tripId);
-    await user.save();
+    trip.expenses.forEach((expense) => {
+      const payerId = expense.payer.toString();
+      if (!balances[payerId]) balances[payerId] = 0;
+      balances[payerId] += expense.amount;
 
-    res.status(200).json({ message: 'User invited successfully', trip, user });
+      expense.splitWith.forEach((split) => {
+        const userId = split.user.toString();
+        if (!balances[userId]) balances[userId] = 0;
+        balances[userId] -= split.amount;
+
+        // Add to summary for "who owes whom"
+        if (userId !== payerId) {
+          summary.push({
+            from: split.user.name,
+            to: expense.payer.name,
+            amount: split.amount,
+          });
+        }
+      });
+    });
+
+    // Convert balances to an array with user details
+    const balanceArray = await Promise.all(
+      Object.entries(balances).map(async ([userId, amount]) => {
+        const user = await User.findById(userId).select('name');
+        return { user, amount };
+      })
+    );
+
+    res.status(200).json({ balances: balanceArray, summary });
   } catch (error) {
+    console.error('Error fetching balances:', error);
     res.status(500).json({ message: 'Server error', error: error.message });
   }
 };
 
-exports.getInvitedTrips = async (req, res) => {
-  const userId = req.user.userId; // Assuming user is authenticated
+const { parse } = require('json2csv');
+
+exports.exportBalances = async (req, res) => {
+  const { tripId } = req.params;
 
   try {
-    const user = await User.findById(userId).populate('invitedTrips');
-    if (!user) {
-      return res.status(404).json({ message: 'User not found' });
+    const trip = await Trip.findById(tripId).populate('expenses.payer expenses.splitWith.user guests.user', 'name');
+    if (!trip) {
+      return res.status(404).json({ message: 'Trip not found' });
     }
 
-    res.status(200).json({ invitedTrips: user.invitedTrips });
+    // Calculate balances
+    const balances = {};
+    trip.expenses.forEach((expense) => {
+      const payerId = expense.payer.toString();
+      if (!balances[payerId]) balances[payerId] = 0;
+      balances[payerId] += expense.amount;
+
+      expense.splitWith.forEach((split) => {
+        const userId = split.user.toString();
+        if (!balances[userId]) balances[userId] = 0;
+        balances[userId] -= split.amount;
+      });
+    });
+
+    const balanceArray = await Promise.all(
+      Object.entries(balances).map(async ([userId, amount]) => {
+        const user = await User.findById(userId).select('name');
+        return { name: user.name, balance: amount };
+      })
+    );
+
+    const csv = parse(balanceArray);
+    res.header('Content-Type', 'text/csv');
+    res.attachment('trip_balances.csv');
+    res.send(csv);
   } catch (error) {
+    console.error('Error exporting balances:', error);
     res.status(500).json({ message: 'Server error', error: error.message });
   }
 };

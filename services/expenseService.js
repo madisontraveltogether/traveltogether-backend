@@ -2,7 +2,9 @@ const Trip = require('../models/tripModel');
 
 exports.createExpense = async (tripId, { title, amount, payer, splitType, splitWith }) => {
 
-  const trip = await Trip.findById(tripId);
+  const trip = await Trip.findById(tripId)
+  .populate('expenses.payer', 'name')
+  .populate('expenses.splitWith.user', 'name'); // Only populate the 'name' field
   if (!trip) throw new Error('Trip not found');
 
   // Perform split calculations based on splitType
@@ -50,7 +52,9 @@ exports.getExpenseById = async (tripId, expenseId) => {
 
 // Update an existing expense by ID
 exports.updateExpense = async (tripId, expenseId, updateData) => {
-  const trip = await Trip.findById(tripId);
+  const trip = await Trip.findById(tripId)
+  .populate('expenses.payer', 'name')
+  .populate('expenses.splitWith.user', 'name'); // Only populate the 'name' field
   if (!trip) throw new Error('Trip not found');
 
   const expense = trip.expenses.id(expenseId);
@@ -76,7 +80,10 @@ exports.deleteExpense = async (tripId, expenseId) => {
     console.log("Received tripId:", tripId);
     console.log("Received expenseId:", expenseId);
 
-    const trip = await Trip.findById(tripId);
+    const trip = await Trip.findById(tripId)
+    .populate('expenses.payer', 'name')
+    .populate('expenses.splitWith.user', 'name'); // Only populate the 'name' field
+
     if (!trip) {
       console.error("Trip not found");
       throw new Error('Trip not found');

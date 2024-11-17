@@ -1,25 +1,29 @@
 // controllers/taskController.js
 const taskService = require('../services/taskService');
+const io = require('../server').io;
+
 
 // Create a new task for a specific trip
-exports.createTask = async (req, res) => {
-  const { tripId } = req.params;
-  const { title, description, assignedTo, dueDate, priority, isRecurring } = req.body;
+exports.createTask = async (tripId, { title, description, assignedTo, dueDate, priority, isRecurring }) => {
+  const trip = await Trip.findById(tripId);
+  if (!trip) throw new Error('Trip not found');
 
-  try {
-    const task = await taskService.createTask(tripId, {
-      title,
-      description,
-      assignedTo,
-      dueDate,
-      priority,
-      isRecurring
+  // Validate assigned users
+  const validUsers = trip.guests.concat(trip.collaborators, trip.organizer.toString());
+  if (assignedTo) {
+    assignedTo.forEach((user) => {
+      if (!validUsers.includes(user.toString())) {
+        throw new Error(`User ${user} is not part of this trip`);
+      }
     });
-    res.status(201).json(task);
-  } catch (error) {
-    console.error('Error creating task:', error);
-    res.status(500).json({ message: 'Server error', error: error.message });
   }
+
+  const task = { title, description, assignedTo, dueDate, priority, isRecurring, status: 'pending' };
+  trip.tasks.push(task);
+  await trip.save();
+  io.to(tripId).emit('taskCreated', task);
+
+  return task;
 };
 
 // Get all tasks for a specific trip
@@ -77,17 +81,26 @@ exports.updateTaskStatus = async (req, res) => {
 };
 
 // Assign users to a task
-exports.assignTask = async (req, res) => {
-  const { tripId, taskId } = req.params;
-  const { assignedTo } = req.body;
+exports.assignTask = async (tripId, taskId, assignedTo) => {
+  const trip = await Trip.findById(tripId);
+  if (!trip) throw new Error('Trip not found');
 
-  try {
-    const updatedTask = await taskService.assignTask(tripId, taskId, assignedTo);
-    res.status(200).json(updatedTask);
-  } catch (error) {
-    console.error('Error assigning users to task:', error);
-    res.status(500).json({ message: 'Server error', error: error.message });
-  }
+  const task = trip.tasks.id(taskId);
+  if (!task) throw new Error('Task not found');
+
+  // Validate assigned users
+  const validUsers = trip.guests.concat(trip.collaborators, trip.organizer.toString());
+  assignedTo.forEach((user) => {
+    if (!validUsers.includes(user.toString())) {
+      throw new Error(`User ${user} is not part of this trip`);
+    }
+  });
+
+  task.assignedTo = assignedTo;
+  await trip.save();
+  io.to(tripId).emit('taskUpdated', task);
+
+  return task;
 };
 
 // Delete a specific task

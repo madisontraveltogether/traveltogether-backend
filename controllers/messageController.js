@@ -32,6 +32,13 @@ exports.sendMessage = async (req, res) => {
       timestamp: message.timestamp,
     });
 
+    req.app.locals.io.to(tripId).emit('receiveMessage', {
+      _id: message._id,
+      userId: { _id: userId, name: req.user.name }, // Assuming req.user has `name`
+      content,
+      timestamp: message.timestamp,
+    });
+
     res.status(201).json(message);
   } catch (error) {
     console.error("Error sending message:", error);
@@ -51,6 +58,26 @@ exports.getMessages = async (req, res) => {
     res.status(500).json({ message: 'Server error' });
   }
 };
+
+exports.reactToMessage = async (req, res) => {
+  const { messageId } = req.params;
+  const { emoji } = req.body;
+  const userId = req.user.userId;
+
+  try {
+    const message = await Message.findById(messageId);
+    if (!message) return res.status(404).json({ message: 'Message not found' });
+
+    message.reactions.push({ emoji, userId });
+    await message.save();
+
+    io.to(message.tripId).emit('reactionUpdate', { messageId, reactions: message.reactions });
+    res.status(200).json({ message: 'Reaction added', reactions: message.reactions });
+  } catch (error) {
+    res.status(500).json({ message: 'Server error' });
+  }
+};
+
 
 // Assuming you added io to app locals
 const io = require('../server').io;

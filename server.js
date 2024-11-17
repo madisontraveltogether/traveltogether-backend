@@ -1,23 +1,24 @@
-// server.js
 const http = require('http');
 const app = require('./app');
 const dotenv = require('dotenv');
 const socketIo = require('socket.io'); // Socket.IO for real-time features
 const express = require('express');
 const cors = require('cors');
+const path = require('path'); // Make sure this is imported if not already
 
+dotenv.config();
+
+// Middleware for serving static files and handling CORS
 const corsOptions = {
-  origin: 'https://refactored-space-fishstick-r4p5g94vv55jcv57-3000.app.github.dev', // Replace with your frontend URL
-  optionsSuccessStatus: 200
+  origin: process.env.FRONTEND_URL || '*', // Replace with your frontend URL
+  methods: ['GET', 'POST', 'PUT', 'DELETE'],
+  optionsSuccessStatus: 200,
 };
-
 app.use(cors(corsOptions));
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
-
-// Middleware and route setup
+// Middleware and JSON parsing
 app.use(express.json());
-dotenv.config();
 
 // Define port
 const PORT = process.env.PORT || 5000;
@@ -26,19 +27,25 @@ const PORT = process.env.PORT || 5000;
 const server = http.createServer(app);
 const io = socketIo(server, {
   cors: {
-    origin: '*', // Allow all origins or specify domains
-    methods: ['GET', 'POST']
-  }
+    origin: process.env.FRONTEND_URL || '*', // Replace with your frontend URL
+    methods: ['GET', 'POST'],
+  },
 });
 
 // WebSocket logic
 io.on('connection', (socket) => {
   console.log('New client connected:', socket.id);
 
-  // Join room for a specific trip
+  // Listen for a client joining a trip
   socket.on('joinTrip', (tripId) => {
     socket.join(tripId);
     console.log(`Client joined trip room: ${tripId}`);
+  });
+
+  // Handle receiving and broadcasting messages
+  socket.on('sendMessage', (message) => {
+    io.to(message.tripId).emit('receiveMessage', message);
+    console.log(`Message sent to trip room ${message.tripId}:`, message);
   });
 
   // Handle voting updates
@@ -51,18 +58,14 @@ io.on('connection', (socket) => {
     io.to(tripId).emit('commentUpdate', { itemId, comment });
   });
 
-  // Handle disconnection
+  // Handle client disconnection
   socket.on('disconnect', () => {
     console.log('Client disconnected:', socket.id);
   });
-  socket.on('sendMessage', (message) => {
-    io.to(message.tripId).emit('receiveMessage', message);
-  });
-
-  socket.on('disconnect', () => {
-    console.log('Client disconnected');
-  });
 });
+
+// Export `io` for use in controllers
+app.locals.io = io;
 
 // Start the server
 server.listen(PORT, () => {

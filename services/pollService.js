@@ -113,3 +113,36 @@ exports.deletePoll = async (tripId, pollId) => {
 
   return poll;
 };
+
+exports.voteOnPoll = async (tripId, pollId, optionId, userId) => {
+  const trip = await Trip.findById(tripId);
+  if (!trip) throw new Error('Trip not found');
+
+  const poll = trip.polls.id(pollId);
+  if (!poll) throw new Error('Poll not found');
+
+  if (poll.expirationDate && new Date() > new Date(poll.expirationDate)) {
+    throw new Error('Poll has expired');
+  }
+
+  const option = poll.options.id(optionId);
+  if (!option) throw new Error('Option not found');
+
+  const userVotes = poll.options.reduce(
+    (acc, opt) => acc + opt.votes.filter((vote) => vote.equals(userId)).length,
+    0
+  );
+
+  if (userVotes >= poll.maxVotesPerUser) {
+    throw new Error(`You can only vote up to ${poll.maxVotesPerUser} times.`);
+  }
+
+  if (option.votes.includes(userId)) {
+    throw new Error('You have already voted on this option.');
+  }
+
+  option.votes.push(userId);
+  await trip.save();
+
+  return poll;
+};
