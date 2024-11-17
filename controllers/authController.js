@@ -4,6 +4,7 @@ const jwt = require('jsonwebtoken');
 const config = require('../config/config');
 const multer = require('multer');
 const path = require('path');
+const authMiddleware = require('../middlewares/authMiddleware');
 
 // Helper functions to generate tokens
 const generateAccessToken = (userId) => {
