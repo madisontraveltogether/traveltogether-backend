@@ -78,7 +78,3 @@ exports.reactToMessage = async (req, res) => {
   }
 };
 
-
-// Assuming you added io to app locals
-const io = require('../server').io;
-
