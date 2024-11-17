@@ -136,16 +136,6 @@ exports.getUser = async (req, res) => {
   }
 };
 
-const storage = multer.diskStorage({
-  destination: (req, file, cb) => {
-    cb(null, 'uploads/profile_pictures'); // Define where to store images
-  },
-  filename: (req, file, cb) => {
-    cb(null, `${req.user.userId}-${Date.now()}${path.extname(file.originalname)}`);
-  },
-});
-
-const upload = multer({ storage });
 
 // Endpoint to upload a profile picture
 
