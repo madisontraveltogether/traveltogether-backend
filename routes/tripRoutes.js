@@ -18,7 +18,6 @@ const router = express.Router();
 
 /** Role Routes */
  
- router.get('/:tripId', authenticateUser, ensureTripMember, tripController.getTripById);
 router.patch('/:tripId', authenticateUser, ensureTripMember, tripController.updateTrip);
 router.post('/:tripId/expenses', authenticateUser, ensureTripMember, tripController.addExpense);
 
