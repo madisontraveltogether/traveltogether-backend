@@ -28,7 +28,8 @@ exports.register = async (req, res) => {
 
     const salt = await bcrypt.genSalt(10);
     const hashedPassword = await bcrypt.hash(password, salt);
-    console.log("Storing hashed password:", hashedPassword);
+    console.log("Plaintext password during registration:", password);
+    console.log("Hashed password during registration:", hashedPassword);
 
     user = new User({ name, email, password: hashedPassword });
     await user.save();
@@ -59,15 +60,17 @@ exports.login = async (req, res) => {
 
   try {
     const user = await User.findOne({ email });
-    if (!user) {
+    console.log("Database-stored user:", user);    if (!user) {
       console.log("User not found for email:", email);
       return res.status(400).json({ message: 'Invalid credentials' });
     }
 
     console.log("Retrieved user:", user);
 
-    const isMatch = await bcrypt.compare(password, user.password);
-    console.log("Password match result:", isMatch);
+    console.log("Plaintext password during login:", password);
+console.log("Stored hashed password:", user.password);
+const isMatch = await bcrypt.compare(password, user.password);
+console.log("Password comparison result:", isMatch);
 
     if (!isMatch) {
       return res.status(400).json({ message: 'Invalid credentials' });
