@@ -39,6 +39,10 @@ exports.createTrip = async (req, res) => {
   const { name, location, description, startDate, endDate, privacy, guests, collaborators } = req.body;
   const organizer = req.user.userId; // The user ID from the token
 
+  if (!name) {
+    return res.status(400).json({ message: "Trip name is required" });
+  }
+  
   try {
     // Create a new trip with optional fields
     const trip = new Trip({
