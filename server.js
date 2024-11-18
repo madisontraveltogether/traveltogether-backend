@@ -13,6 +13,7 @@ dotenv.config();
 
 const corsOptions = {
   origin: 'https://www.gettraveltogether.com/',
+  //hopefully this part will work
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization'],
 };
