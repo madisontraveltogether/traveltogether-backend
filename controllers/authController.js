@@ -28,6 +28,7 @@ exports.register = async (req, res) => {
 
     const salt = await bcrypt.genSalt(10);
     const hashedPassword = await bcrypt.hash(password, salt);
+    console.log("Storing hashed password:", hashedPassword);
 
     user = new User({ name, email, password: hashedPassword });
     await user.save();
@@ -50,38 +51,38 @@ exports.register = async (req, res) => {
   }
 };
 
-
 exports.login = async (req, res) => {
   const { email, password } = req.body;
-  console.log("Login request received:", { email, password });
+  console.log("Login request received with email:", email);
 
   try {
     const user = await User.findOne({ email });
     if (!user) {
-      console.log("User not found");
+      console.log("User not found for email:", email);
       return res.status(400).json({ message: 'Invalid credentials' });
     }
 
-    console.log("Stored user data:", user);
+    console.log("Retrieved user:", user);
 
     const isMatch = await bcrypt.compare(password, user.password);
     console.log("Password match result:", isMatch);
 
     if (!isMatch) {
-      console.log("Password mismatch");
       return res.status(400).json({ message: 'Invalid credentials' });
     }
 
     const accessToken = generateAccessToken(user._id);
-    console.log("Access token generated successfully");
+    console.log("Access token generated for user:", user._id);
 
-    res.status(200).json({ accessToken, user: { id: user._id, name: user.name, email: user.email } });
+    res.status(200).json({
+      accessToken,
+      user: { id: user._id, name: user.name, email: user.email },
+    });
   } catch (error) {
     console.error("Server error during login:", error);
     res.status(500).json({ message: 'Server error' });
   }
 };
-
 
 // Refresh the access token using the refresh token
 exports.refreshToken = async (req, res) => {
