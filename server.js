@@ -11,14 +11,14 @@ dotenv.config();
 
 // Middleware for serving static files and handling CORS
 
-app.use(cors(corsOptions));
+const corsOptions = {
+  origin: 'https://traveltogether-frontend1-hn4u26az5-mh-uxs-projects.vercel.app',
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization'],
+};
+
+app.use(cors(corsOptions)); // Enable CORS
 app.options('*', cors(corsOptions));
-app.use((req, res, next) => {
-  res.header('Access-Control-Allow-Origin', 'traveltogether-frontend1-hn4u26az5-mh-uxs-projects.vercel.app');
-  res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
-  res.header('Access-Control-Allow-Headers', 'Content-Type, Authorization');
-  next();
-});
 
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
