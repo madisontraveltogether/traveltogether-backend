@@ -5,7 +5,9 @@ const socketIo = require('socket.io'); // Socket.IO for real-time features
 const express = require('express');
 const cors = require('cors');
 const path = require('path'); // Ensure this is imported if not already
+const WebSocket = require('ws');
 
+const wss = new WebSocket.Server({ server });
 dotenv.config();
 
 // Middleware for serving static files and handling CORS
@@ -89,3 +91,18 @@ app.locals.io = io;
 server.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);
 });
+
+wss.on('connection', (ws) => {
+  console.log('New WebSocket connection');
+
+  ws.on('message', (message) => {
+    console.log('Received message:', message);
+    ws.send('Message received: ' + message);
+  });
+
+  ws.on('close', () => {
+    console.log('WebSocket connection closed');
+  });
+});
+
+app.locals.wss = wss;

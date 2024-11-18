@@ -12,7 +12,8 @@ const tripSettingsController = require('../controllers/tripSettingsController');
 const authMiddleware = require('../middlewares/authMiddleware');
 const { ensureTripMember } = require('../middlewares/roleMiddleware');
 const { authenticateUser } = require('../middlewares/authMiddleware');
-
+const multer = require('multer');
+const upload = multer();
 
 const router = express.Router();
 
