@@ -7,7 +7,7 @@ const path = require('path');
 
 const storage = multer.diskStorage({
   destination: (req, file, cb) => {
-    cb(null, 'uploads/trip_covers'); // Define where to store images
+    cb(null, 'uploads/trip_covers');
   },
   filename: (req, file, cb) => {
     cb(null, `${Date.now()}-${file.originalname}`);
@@ -18,16 +18,21 @@ const upload = multer({
   storage,
   fileFilter: (req, file, cb) => {
     const fileTypes = /jpeg|jpg|png|gif/;
-    const extname = fileTypes.test(path.extname(file.originalname).toLowerCase());
+    const extname = fileTypes.test(
+      path.extname(file.originalname).toLowerCase()
+    );
     const mimetype = fileTypes.test(file.mimetype);
 
     if (mimetype && extname) {
       return cb(null, true);
     } else {
-      cb('Error: Images Only!');
+      cb(new Error('Error: Images Only!'));
     }
   },
 });
+
+// Export the upload middleware
+module.exports.upload = upload;
 
 // Create a new trip
 exports.createTrip = async (req, res) => {

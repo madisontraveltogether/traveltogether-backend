@@ -50,10 +50,10 @@ exports.register = async (req, res) => {
   }
 };
 
-// Login an existing user
+
 exports.login = async (req, res) => {
   const { email, password } = req.body;
-  console.log("Login request received:", { email, password }); // Log incoming data
+  console.log("Login request received:", { email, password });
 
   try {
     const user = await User.findOne({ email });
@@ -62,7 +62,11 @@ exports.login = async (req, res) => {
       return res.status(400).json({ message: 'Invalid credentials' });
     }
 
+    console.log("Stored user data:", user);
+
     const isMatch = await bcrypt.compare(password, user.password);
+    console.log("Password match result:", isMatch);
+
     if (!isMatch) {
       console.log("Password mismatch");
       return res.status(400).json({ message: 'Invalid credentials' });
@@ -77,6 +81,7 @@ exports.login = async (req, res) => {
     res.status(500).json({ message: 'Server error' });
   }
 };
+
 
 // Refresh the access token using the refresh token
 exports.refreshToken = async (req, res) => {
