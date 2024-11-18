@@ -31,10 +31,6 @@ exports.register = async (req, res) => {
     console.log("Plaintext password during registration:", password);
     console.log("Hashed password during registration:", hashedPassword);
 
-    bcrypt.compare(testPassword, storedHash, (err, result) => {
-      console.log("Manual bcrypt comparison result:", result);
-    });
-
     user = new User({ name, email, password: hashedPassword });
     await user.save();
 
@@ -75,6 +71,10 @@ exports.login = async (req, res) => {
 console.log("Stored hashed password:", user.password);
 const isMatch = await bcrypt.compare(password, user.password);
 console.log("Password comparison result:", isMatch);
+
+bcrypt.compare(testPassword, storedHash, (err, result) => {
+  console.log("Manual bcrypt comparison result:", result);
+});
 
     if (!isMatch) {
       return res.status(400).json({ message: 'Invalid credentials' });
