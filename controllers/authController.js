@@ -72,7 +72,7 @@ console.log("Stored hashed password:", user.password);
 const isMatch = await bcrypt.compare(password, user.password);
 console.log("Password comparison result:", isMatch);
 
-bcrypt.compare(testPassword, storedHash, (err, result) => {
+bcrypt.compare(password, storedHash, (err, result) => {
   console.log("Manual bcrypt comparison result:", result);
 });
 
