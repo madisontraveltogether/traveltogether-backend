@@ -12,7 +12,7 @@ dotenv.config();
 // Middleware for serving static files and handling CORS
 
 const corsOptions = {
-  origin: 'https://traveltogether-frontend1-hn4u26az5-mh-uxs-projects.vercel.app',
+  origin: 'https://www.gettraveltogether.com/',
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization'],
 };
