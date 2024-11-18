@@ -10,12 +10,6 @@ const WebSocket = require('ws');
 dotenv.config();
 
 // Middleware for serving static files and handling CORS
-const corsOptions = {
-  origin: ['https://refactored-space-fishstick-r4p5g94vv55jcv57-3000.app.github.dev', 'http://localhost:3000'], // Add your frontend's URL
-  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization'], // Allow necessary headers
-  credentials: true, // Allow cookies and credentials
-};
 
 app.use(cors(corsOptions));
 app.options('*', cors(corsOptions));
