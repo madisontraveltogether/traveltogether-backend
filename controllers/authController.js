@@ -28,8 +28,6 @@ exports.register = async (req, res) => {
 
     const salt = await bcrypt.genSalt(10);
     const hashedPassword = await bcrypt.hash(password, salt);
-    console.log("Plaintext password during registration:", password);
-    console.log("Hashed password during registration:", hashedPassword);
 
     user = new User({ name, email, password: hashedPassword });
     await user.save();
@@ -65,28 +63,20 @@ exports.login = async (req, res) => {
       return res.status(400).json({ message: 'Invalid credentials' });
     }
 
-    console.log("Retrieved user:", user);
 
-    console.log("Plaintext password during login:", password);
-console.log("Stored hashed password:", user.password);
-const isMatch = await bcrypt.compare(password, user.password);
-console.log("Password comparison result:", isMatch);
-
-bcrypt.compare(password, user.password, (err, result) => {
-  console.log("Manual bcrypt comparison result:", result);
-});
+    const isMatch = await bcrypt.compare(password, user.password);
 
     if (!isMatch) {
       return res.status(400).json({ message: 'Invalid credentials' });
     }
 
-    // const accessToken = generateAccessToken(user._id);
+     const accessToken = generateAccessToken(user._id);
     // console.log("Access token generated for user:", user._id);
 
-    // res.status(200).json({
-    //   accessToken,
-    //   user: { id: user._id, name: user.name, email: user.email },
-    // });
+     res.status(200).json({
+       accessToken,
+       user: { id: user._id, name: user.name, email: user.email },
+     });
   } catch (error) {
     console.error("Server error during login:", error);
     res.status(500).json({ message: 'Server error' });
