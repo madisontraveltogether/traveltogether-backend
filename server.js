@@ -7,7 +7,6 @@ const cors = require('cors');
 const path = require('path'); // Ensure this is imported if not already
 const WebSocket = require('ws');
 
-const wss = new WebSocket.Server({ server });
 dotenv.config();
 
 // Middleware for serving static files and handling CORS
@@ -87,13 +86,11 @@ io.on('connection', (socket) => {
   });
 });
 
+const wss = new WebSocket.Server({ server });
+
+
 // Export `io` for use in controllers
 app.locals.io = io;
-
-// Start the server
-server.listen(PORT, () => {
-  console.log(`Server running on port ${PORT}`);
-});
 
 wss.on('connection', (ws) => {
   console.log('New WebSocket connection');
@@ -109,3 +106,10 @@ wss.on('connection', (ws) => {
 });
 
 app.locals.wss = wss;
+
+
+// Start the server
+server.listen(PORT, () => {
+  console.log(`Server running on port ${PORT}`);
+});
+
