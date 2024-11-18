@@ -31,6 +31,10 @@ exports.register = async (req, res) => {
     console.log("Plaintext password during registration:", password);
     console.log("Hashed password during registration:", hashedPassword);
 
+    bcrypt.compare(testPassword, storedHash, (err, result) => {
+      console.log("Manual bcrypt comparison result:", result);
+    });
+
     user = new User({ name, email, password: hashedPassword });
     await user.save();
 
