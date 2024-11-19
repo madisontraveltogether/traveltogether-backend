@@ -33,8 +33,8 @@ const PORT = process.env.PORT || 5000;
 const server = http.createServer(app);
 const io = socketIo(server, {
   cors: {
-    origin: process.env.FRONTEND_URL || '*', // Replace with your frontend URL
-    methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH'], // Add PATCH for compatibility
+    origin: process.env.FRONTEND_URL || 'https://www.gettraveltogether.com/', 
+    methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH'], 
   },
 });
 const taskController = require('./controllers/taskController');
