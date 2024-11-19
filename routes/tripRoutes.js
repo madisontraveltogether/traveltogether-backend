@@ -86,8 +86,8 @@ router.delete('/:tripId/announcements/:announcementId', authMiddleware, announce
  */
 router.post('/:tripId/itinerary', authMiddleware, itineraryController.createItineraryItem);
 router.get('/:tripId/itinerary', authMiddleware, itineraryController.getItinerary);
-router.post('/:tripId/itinerary/:itemId/suggestions', authMiddleware, itineraryController.addSuggestion);
-router.post('/:tripId/itinerary/:itemId/suggestions/:suggestionId/vote', authMiddleware, itineraryController.voteOnSuggestion);
+router.post('/:tripId/itinerary/suggestions', authMiddleware, itineraryController.addSuggestion);
+router.post('/:tripId/itinerary/suggestions/:suggestionId/vote', authMiddleware, itineraryController.voteOnSuggestion);
 router.delete('/:tripId/itinerary/:itemId', authMiddleware, itineraryController.deleteItineraryItem);
 
 /**
