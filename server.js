@@ -12,7 +12,7 @@ dotenv.config();
 // Middleware for serving static files and handling CORS
 
 const corsOptions = {
-  origin: 'https://www.gettraveltogether.com/',
+  origin: 'https://www.gettraveltogether.com',
   //hopefully this part will work
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization'],
@@ -33,7 +33,7 @@ const PORT = process.env.PORT || 5000;
 const server = http.createServer(app);
 const io = socketIo(server, {
   cors: {
-    origin: process.env.FRONTEND_URL || 'https://www.gettraveltogether.com/', 
+    origin: process.env.FRONTEND_URL || 'https://www.gettraveltogether.com', 
     methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH'], 
   },
 });
