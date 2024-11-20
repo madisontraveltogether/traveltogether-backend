@@ -1,124 +1,89 @@
 const http = require('http');
 const app = require('./app');
 const dotenv = require('dotenv');
-const socketIo = require('socket.io'); // Socket.IO for real-time features
+const socketIo = require('socket.io');
 const express = require('express');
-const cors = require('cors');
-const path = require('path'); // Ensure this is imported if not already
 const WebSocket = require('ws');
 
 dotenv.config();
 
+// CORS Configuration
 const corsOptions = {
-  origin: 'https://www.gettraveltogether.com',
-  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS', 'PATCH'],
+  origin: process.env.FRONTEND_URL || 'https://www.gettraveltogether.com',
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH'],
   allowedHeaders: ['Content-Type', 'Authorization'],
   credentials: true,
 };
 
-app.use(cors(corsOptions)); // Enable CORS
-
-app.use((req, res, next) => {
-  if (req.method === 'OPTIONS') {
-    res.header('Access-Control-Allow-Origin', 'https://www.gettraveltogether.com');
-    res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
-    res.header('Access-Control-Allow-Headers', 'Content-Type, Authorization');
-    res.header('Access-Control-Allow-Credentials', 'true');
-    return res.status(200).json({});
-  }
-  next();
-});
-
-app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
-
-// Middleware and JSON parsing
 app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
+app.use(cors(corsOptions));
+app.use('/uploads', express.static('uploads'));
 
-// Define port
+// Server Port
 const PORT = process.env.PORT || 5000;
 
-// Create HTTP server and initialize Socket.IO
+// Create HTTP server
 const server = http.createServer(app);
+
+// Socket.IO Configuration
 const io = socketIo(server, {
   cors: {
-    origin: process.env.FRONTEND_URL || 'https://www.gettraveltogether.com', 
-    methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH'], 
+    origin: process.env.FRONTEND_URL || 'https://www.gettraveltogether.com',
+    methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH'],
   },
 });
-const taskController = require('./controllers/taskController');
-taskController.setSocket(io);
 
-// WebSocket logic
+// WebSocket Configuration
+const wss = new WebSocket.Server({ server });
+
+// Initialize Socket.IO Handlers
 io.on('connection', (socket) => {
-  console.log('New client connected:', socket.id);
+  console.log(`Socket.IO connected: ${socket.id}`);
 
-  // Listen for a client joining a trip
   socket.on('joinTrip', (tripId) => {
-    if (!tripId) {
-      console.log('Invalid tripId received.');
-      return;
+    if (tripId) {
+      socket.join(tripId);
+      console.log(`Socket joined trip: ${tripId}`);
     }
-    socket.join(tripId);
-    console.log(`Client joined trip room: ${tripId}`);
   });
 
-  // Handle receiving and broadcasting messages
   socket.on('sendMessage', (message) => {
     if (message && message.tripId) {
       io.to(message.tripId).emit('receiveMessage', message);
-      console.log(`Message sent to trip room ${message.tripId}:`, message);
-    } else {
-      console.log('Invalid message received:', message);
     }
   });
 
-  // Handle voting updates
-  socket.on('voteUpdate', (tripId, itemId, updateData) => {
-    if (tripId && itemId) {
-      io.to(tripId).emit('voteUpdate', { itemId, ...updateData });
-    } else {
-      console.log('Invalid voting update:', { tripId, itemId, updateData });
-    }
-  });
-
-  // Handle comment updates
-  socket.on('commentUpdate', (tripId, itemId, comment) => {
-    if (tripId && itemId && comment) {
-      io.to(tripId).emit('commentUpdate', { itemId, comment });
-    } else {
-      console.log('Invalid comment update:', { tripId, itemId, comment });
-    }
-  });
-
-  // Handle client disconnection
   socket.on('disconnect', () => {
-    console.log('Client disconnected:', socket.id);
+    console.log(`Socket.IO disconnected: ${socket.id}`);
   });
 });
 
-const wss = new WebSocket.Server({ server });
-
-// Export `io` for use in controllers
-app.locals.io = io;
-
+// WebSocket Handlers
 wss.on('connection', (ws) => {
-  console.log('New WebSocket connection');
+  console.log('WebSocket connected');
 
   ws.on('message', (message) => {
-    console.log('Received message:', message);
-    ws.send('Message received: ' + message);
+    console.log('WebSocket received message:', message);
+    ws.send(`Echo: ${message}`);
   });
 
   ws.on('close', () => {
-    console.log('WebSocket connection closed');
+    console.log('WebSocket disconnected');
   });
 });
 
+// Attach Real-Time Features to App
+app.locals.io = io;
 app.locals.wss = wss;
 
+// Global Error Handler Middleware (optional)
+app.use((err, req, res, next) => {
+  console.error(err.stack);
+  res.status(500).json({ error: 'Something went wrong' });
+});
 
-// Start the server
+// Start Server
 server.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);
 });
-
