@@ -7,11 +7,11 @@ const authMiddleware = require('../middlewares/authMiddleware');
 
 // Helper functions to generate tokens
 const generateAccessToken = (userId) => {
-  return jwt.sign({ userId }, process.env.JWT_SECRET, { expiresIn: '7d' });
+  return jwt.sign({ userId }, config.jwtSecret, { expiresIn: '7d' });
 };
 
 const generateRefreshToken = (userId) => {
-  return jwt.sign({ userId }, process.env.JWT_SECRET, { expiresIn: '7d' });
+  return jwt.sign({ userId }, config.jwtSecret, { expiresIn: '7d' });
 };
 
 
