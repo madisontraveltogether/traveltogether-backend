@@ -3,10 +3,10 @@ const taskService = require('../services/taskService');
 const Trip = require('../models/tripModel');
 
 let io;
-
-exports.setSocket = (socketInstance) => {
-  io = socketInstance;
+exports.initialize = (socketIo) => {
+  io = socketIo;
 };
+
 
 // Create a new task for a specific trip
 exports.createTask = async (req, res) => {
