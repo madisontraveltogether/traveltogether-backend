@@ -2,7 +2,7 @@ require('dotenv').config();
 
 module.exports = {
   // MongoDB connection URI
-  mongoURI: process.env.MONGO_URI || 'mongodb://localhost:27017/your_database_name',
+  mongoURI: process.env.MONGO_URI || 'mongodb+srv://packback2000:kLzprrmy1nlbcjda@cluster0.0iok7.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0',
 
   // JWT Secret for signing tokens
   jwtSecret: process.env.JWT_SECRET || 'fallback_default_secret',

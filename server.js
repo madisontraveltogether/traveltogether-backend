@@ -9,13 +9,11 @@ const WebSocket = require('ws');
 
 dotenv.config();
 
-// Middleware for serving static files and handling CORS
-
 const corsOptions = {
   origin: 'https://www.gettraveltogether.com',
-  //hopefully this part will work
-  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS', 'PATCH'],
   allowedHeaders: ['Content-Type', 'Authorization'],
+  credentials: true,
 };
 
 app.use(cors(corsOptions)); // Enable CORS
