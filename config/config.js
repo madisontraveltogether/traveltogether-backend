@@ -6,7 +6,7 @@ const config = {
 
   // MongoDB Configuration
   database: {
-    uri: process.env.MONGO_URI || 'mongodb://localhost:27017/travelTogether',
+    uri: process.env.MONGO_URI,
     options: {
       useNewUrlParser: true,
       useUnifiedTopology: true,
@@ -17,9 +17,11 @@ const config = {
 
   // JWT Configuration
   auth: {
-    jwtSecret: process.env.JWT_SECRET || 'fallback_default_secret',
+    jwtSecret: process.env.JWT_SECRET,
     jwtExpiration: process.env.JWT_EXPIRATION || '7d', // Default: 7 days
   },
+ 
+
 
   // Server Port
   server: {
