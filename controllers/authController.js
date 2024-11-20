@@ -7,9 +7,6 @@ const authMiddleware = require('../middlewares/authMiddleware');
 
 // Helper functions to generate tokens
 const generateAccessToken = (userId) => {
-  if (!config.jwtSecret) {
-    throw new Error('JWT Secret is not defined');
-  }
   return jwt.sign({ userId }, process.env.JWT_SECRET, { expiresIn: '7d' });
 };
 
