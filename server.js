@@ -4,6 +4,8 @@ const dotenv = require('dotenv');
 const socketIo = require('socket.io');
 const express = require('express');
 const WebSocket = require('ws');
+const cors = require('cors');
+
 
 dotenv.config();
 
