@@ -1,18 +1,56 @@
 require('dotenv').config();
 
-module.exports = {
-  // MongoDB connection URI
-  mongoURI: process.env.MONGO_URI || 
+const config = {
+  // Application Environment
+  environment: process.env.NODE_ENV || 'development',
 
-  // JWT Secret for signing tokens
-  jwtSecret: process.env.JWT_SECRET || 'fallback_default_secret',
+  // MongoDB Configuration
+  database: {
+    uri: process.env.MONGO_URI || 'mongodb://localhost:27017/travelTogether',
+    options: {
+      useNewUrlParser: true,
+      useUnifiedTopology: true,
+      useCreateIndex: true,
+      useFindAndModify: false,
+    },
+  },
 
-  // Port for the server
-  port: process.env.PORT || 5000,
+  // JWT Configuration
+  auth: {
+    jwtSecret: process.env.JWT_SECRET || 'fallback_default_secret',
+    jwtExpiration: process.env.JWT_EXPIRATION || '7d', // Default: 7 days
+  },
 
-  // Email configuration for notifications (optional)
-  emailUser: process.env.EMAIL_USER || 'your_email@example.com',
-  emailPass: process.env.EMAIL_PASS || 'your_email_password',
+  // Server Port
+  server: {
+    port: process.env.PORT || 5000,
+  },
 
-  // Additional settings can go here, such as API keys, service URLs, etc.
+  // Email Configuration
+  email: {
+    user: process.env.EMAIL_USER || 'your_email@example.com',
+    pass: process.env.EMAIL_PASS || 'your_email_password',
+    service: process.env.EMAIL_SERVICE || 'gmail', // Example: gmail, outlook
+  },
+
+  // Logging Configuration
+  logging: {
+    level: process.env.LOG_LEVEL || 'info', // Levels: error, warn, info, verbose, debug
+    logToFile: process.env.LOG_TO_FILE || false, // Enable file logging
+  },
+
+  // Socket.IO URL
+  socket: {
+    url: process.env.SOCKET_URL || 'https://www.gettraveltogether.com',
+  },
+
+  // Base Application URL (for frontend redirects)
+  baseUrl: process.env.BASE_URL || 'https://www.gettraveltogether.com',
+
+  // Feature Toggles (Optional for specific functionalities)
+  features: {
+    enableEmailNotifications: process.env.ENABLE_EMAIL_NOTIFICATIONS === 'true',
+  },
 };
+
+module.exports = config;
