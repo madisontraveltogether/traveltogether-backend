@@ -15,6 +15,7 @@ exports.createItineraryItem = async (req, res) => {
   }
 };
 
+
 // Add a suggestion to an itinerary item
 exports.addSuggestion = async (req, res) => {
   const { tripId, itemId } = req.params;
