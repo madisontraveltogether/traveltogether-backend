@@ -96,6 +96,8 @@ exports.getTripById = async (req, res) => {
     if (!trip) {
       return res.status(404).json({ message: 'Trip not found' });
     }
+    if (req.body.startDate) trip.startDate = req.body.startDate;
+if (req.body.endDate) trip.endDate = req.body.endDate;
     res.status(200).json(trip);
   } catch (error) {
     res.status(500).json({ message: 'Server error', error: error.message });
