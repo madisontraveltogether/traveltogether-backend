@@ -7,7 +7,6 @@ const path = require('path');
 const app = require('./app'); // Ensure `app.js` has correct configurations
 
 dotenv.config(); // Load .env variables
-app.options('*', cors(corsOptions)); // Handle preflight requests
 
 const corsOptions = {
   origin: (origin, callback) => {
@@ -22,6 +21,7 @@ const corsOptions = {
   allowedHeaders: ['Content-Type', 'Authorization'],
   credentials: true,
 };
+app.options('*', cors(corsOptions)); // Handle preflight requests
 
 app.use(cors(corsOptions));
 

@@ -26,6 +26,7 @@ const corsOptions = {
 };
 
 app.use(cors(corsOptions));
+
 app.use(morgan('dev')); // Logger for development
 
 // Routes
