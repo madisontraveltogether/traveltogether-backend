@@ -17,7 +17,6 @@ connectDB();
 
 // Middleware
 app.use(express.json()); // JSON body parser
-const cors = require('cors');
 
 const corsOptions = {
   origin: 'https://www.gettraveltogether.com', // Replace with your frontend URL
