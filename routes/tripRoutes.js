@@ -26,7 +26,15 @@ router.get('/:tripId', authMiddleware, tripController.getTripById);
 router.patch('/:tripId', authMiddleware, tripController.updateTrip);
 router.delete('/:tripId', authMiddleware, tripController.deleteTrip);
 router.post('/', authMiddleware, tripController.createTrip);
-
+router.post('/:tripId/notify', authMiddleware, tripController.notifyAllAttendees);
+router.post('/:tripId/announcements/pin', authMiddleware, tripController.pinAnnouncement);
+router.post(
+    '/:tripId/announcements/:announcementId/comments',
+    authMiddleware,
+    tripController.addAnnouncementComment
+  );
+  router.get('/:tripId/messages/latest', authMiddleware, messagesController.getLatestMessages);
+  
 /**
  * Guest Routes
  */
