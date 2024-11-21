@@ -453,3 +453,38 @@ exports.logActivity = async (tripId, userId, activity) => {
     console.error('Failed to log activity:', error.message);
   }
 };
+
+exports.notifyAllAttendees = async (req, res) => {
+  try {
+    const { tripId } = req.params;
+    const trip = await Trip.findById(tripId);
+    if (!trip) return res.status(404).json({ message: 'Trip not found' });
+
+    // Notify logic here (e.g., send emails)
+    res.status(200).json({ message: 'Notifications sent.' });
+  } catch (error) {
+    res.status(500).json({ message: 'Failed to send notifications.', error: error.message });
+  }
+};
+
+exports.pinAnnouncement = async (req, res) => {
+  try {
+    const { tripId } = req.params;
+    const { announcementId } = req.body;
+
+    const trip = await Trip.findById(tripId);
+    if (!trip) return res.status(404).json({ message: 'Trip not found' });
+
+    const announcement = trip.announcements.find((a) => a.id === announcementId);
+    if (!announcement) return res.status(404).json({ message: 'Announcement not found.' });
+
+    // Pin the announcement
+    trip.announcements.forEach((a) => (a.isPinned = false)); // Unpin others
+    announcement.isPinned = true;
+
+    await trip.save();
+    res.status(200).json({ message: 'Announcement pinned successfully.' });
+  } catch (error) {
+    res.status(500).json({ message: 'Failed to pin announcement.', error: error.message });
+  }
+};
