@@ -34,6 +34,12 @@ router.post(
     tripController.addAnnouncementComment
   );
   router.get('/:tripId/messages/latest', authMiddleware, messagesController.getLatestMessages);
+  router.get('/:tripId/notifications', authMiddleware, tripController.getNotifications);
+  router.get('/:tripId/activity-logs', authMiddleware, tripController.getActivityLogs);
+  router.get('/:tripId/activity-logs', authMiddleware, tripController.getActivityLogs);
+  router.post('/:tripId/resend-invite', authMiddleware, tripController.resendInvite);
+  router.get('/:tripId/export', authMiddleware, tripController.exportTrip);
+  router.get('/:tripId/guests/filter', authMiddleware, tripController.getFilteredGuests);
   
 /**
  * Guest Routes

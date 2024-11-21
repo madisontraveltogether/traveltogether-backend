@@ -121,6 +121,26 @@ const TripSchema = new Schema({
     maxGuests: { type: Number, default: 50 },
   },
   tripDates: [String],
+  notifications: [
+    {
+      message: String,
+      date: { type: Date, default: Date.now },
+    },
+  ],
+  activityLogs: [
+    {
+      activity: String,
+      user: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
+      date: { type: Date, default: Date.now },
+    },
+  ],
+  suggestions: [
+    {
+      text: String,
+      user: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
+      date: { type: Date, default: Date.now },
+    },
+  ],
 });
 
 TripSchema.pre('save', function (next) {

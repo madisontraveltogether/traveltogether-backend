@@ -6,6 +6,7 @@ const multer = require('multer');
 const path = require('path');
 const sendMail = require('../services/mailService');
 const { generateInvitationLink } = require('../utils/invitationUtils'); 
+const PDFDocument = require('pdfkit');
 
 const storage = multer.diskStorage({
   destination: (req, file, cb) => {
@@ -144,6 +145,78 @@ exports.deleteTrip = async (req, res) => {
     res.status(500).json({ message: 'Server error', error: error.message });
   }
 };
+
+exports.getNotifications = async (req, res) => {
+  const { tripId } = req.params;
+
+  try {
+    const trip = await Trip.findById(tripId);
+    if (!trip) return res.status(404).json({ message: 'Trip not found' });
+
+    // Retrieve notifications
+    const notifications = trip.notifications || []; // Assume a `notifications` field in the trip model
+    res.status(200).json(notifications);
+  } catch (error) {
+    res.status(500).json({ message: 'Failed to fetch notifications.', error: error.message });
+  }
+};
+exports.getActivityLogs = async (req, res) => {
+  const { tripId } = req.params;
+
+  try {
+    const trip = await Trip.findById(tripId);
+    if (!trip) return res.status(404).json({ message: 'Trip not found' });
+
+    // Return activity logs
+    const logs = trip.activityLogs || [];
+    res.status(200).json(logs);
+  } catch (error) {
+    res.status(500).json({ message: 'Failed to fetch activity logs.', error: error.message });
+  }
+};
+
+exports.addSuggestion = async (req, res) => {
+  const { tripId } = req.params;
+  const { text } = req.body;
+
+  try {
+    const trip = await Trip.findById(tripId);
+    if (!trip) return res.status(404).json({ message: 'Trip not found' });
+
+    // Add suggestion
+    trip.suggestions.push({ text, user: req.user.userId });
+    await trip.save();
+
+    res.status(200).json({ message: 'Suggestion added successfully.' });
+  } catch (error) {
+    res.status(500).json({ message: 'Failed to add suggestion.', error: error.message });
+  }
+};
+
+exports.resendInvite = async (req, res) => {
+  const { tripId } = req.params;
+  const { email } = req.body;
+
+  try {
+    const trip = await Trip.findById(tripId);
+    if (!trip) return res.status(404).json({ message: 'Trip not found' });
+
+    // Check if the email is in pendingInvites
+    if (!trip.pendingInvites.includes(email)) {
+      return res.status(404).json({ message: 'Email not found in pending invites.' });
+    }
+
+    // Send invitation email
+    const invitationLink = `https://traveltogether.com/trips/${tripId}/join`;
+    await sendMail(email, `You're invited to ${trip.name}`, `Join here: ${invitationLink}`);
+
+    res.status(200).json({ message: 'Invitation resent successfully.' });
+  } catch (error) {
+    res.status(500).json({ message: 'Failed to resend invitation.', error: error.message });
+  }
+};
+
+
 
 exports.getAllUserTrips = async (req, res) => {
   const userId = req.user.userId; // Assuming `userId` is available in `req.user`
@@ -312,3 +385,71 @@ exports.addCollaborator = async (req, res) => {
   }
 };
 
+exports.exportTrip = async (req, res) => {
+  const { tripId } = req.params;
+
+  try {
+    const trip = await Trip.findById(tripId).populate('guests.user', 'name email');
+    if (!trip) return res.status(404).json({ message: 'Trip not found' });
+
+    const doc = new PDFDocument();
+    res.setHeader('Content-Type', 'application/pdf');
+    res.setHeader('Content-Disposition', `attachment; filename=${trip.name}.pdf`);
+
+    doc.text(`Trip Name: ${trip.name}`);
+    doc.text(`Location: ${trip.location}`);
+    doc.text(`Dates: ${trip.startDate} to ${trip.endDate}`);
+    doc.text(`Guests:`);
+    trip.guests.forEach((guest) => {
+      doc.text(`- ${guest.user.name} (${guest.rsvpStatus})`);
+    });
+
+    doc.pipe(res);
+    doc.end();
+  } catch (error) {
+    res.status(500).json({ message: 'Failed to export trip.', error: error.message });
+  }
+};
+
+exports.addNotification = async (tripId, message) => {
+  try {
+    await Trip.findByIdAndUpdate(tripId, {
+      $push: { notifications: { message, date: new Date() } },
+    });
+  } catch (error) {
+    console.error('Failed to add notification:', error.message);
+  }
+};
+
+// Filter Guests
+exports.getFilteredGuests = async (req, res) => {
+  const { tripId } = req.params;
+  const { rsvpStatus } = req.query;
+
+  try {
+    const trip = await Trip.findById(tripId).populate('guests.user', 'name email');
+    if (!trip) return res.status(404).json({ message: 'Trip not found' });
+
+    let filteredGuests = trip.guests;
+    if (rsvpStatus) {
+      filteredGuests = filteredGuests.filter(
+        (guest) => guest.rsvpStatus.toLowerCase() === rsvpStatus.toLowerCase()
+      );
+    }
+
+    res.status(200).json(filteredGuests);
+  } catch (error) {
+    res.status(500).json({ message: 'Failed to fetch filtered guests.', error: error.message });
+  }
+};
+
+// Activity Logs
+exports.logActivity = async (tripId, userId, activity) => {
+  try {
+    await Trip.findByIdAndUpdate(tripId, {
+      $push: { activityLogs: { activity, user: userId, date: new Date() } },
+    });
+  } catch (error) {
+    console.error('Failed to log activity:', error.message);
+  }
+};
