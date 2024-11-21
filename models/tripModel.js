@@ -123,7 +123,7 @@ const TripSchema = new Schema({
   tripDates: [String],
 });
 
-tripSchema.pre('save', function (next) {
+TripSchema.pre('save', function (next) {
   if (this.startDate && this.endDate) {
     this.tripDates = generateTripDates(this.startDate, this.endDate);
   }
