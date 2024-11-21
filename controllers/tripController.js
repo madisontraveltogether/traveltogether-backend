@@ -488,3 +488,40 @@ exports.pinAnnouncement = async (req, res) => {
     res.status(500).json({ message: 'Failed to pin announcement.', error: error.message });
   }
 };
+
+exports.addAnnouncementComment = async (req, res) => {
+  const { tripId, announcementId } = req.params;
+  const { text } = req.body;
+  const userId = req.user.userId;
+
+  if (!text) {
+    return res.status(400).json({ message: 'Comment text is required.' });
+  }
+
+  try {
+    const trip = await Trip.findById(tripId);
+    if (!trip) {
+      return res.status(404).json({ message: 'Trip not found.' });
+    }
+
+    const announcement = trip.announcements.id(announcementId);
+    if (!announcement) {
+      return res.status(404).json({ message: 'Announcement not found.' });
+    }
+
+    // Add the comment to the announcement
+    const newComment = {
+      text,
+      user: userId,
+      date: new Date(),
+    };
+
+    announcement.comments.push(newComment);
+    await trip.save();
+
+    res.status(201).json({ message: 'Comment added successfully.', comments: announcement.comments });
+  } catch (error) {
+    console.error('Error adding comment:', error);
+    res.status(500).json({ message: 'Failed to add comment.', error: error.message });
+  }
+};

@@ -28,14 +28,9 @@ router.delete('/:tripId', authMiddleware, tripController.deleteTrip);
 router.post('/', authMiddleware, tripController.createTrip);
 router.post('/:tripId/notify', authMiddleware, tripController.notifyAllAttendees);
 router.post('/:tripId/announcements/pin', authMiddleware, tripController.pinAnnouncement);
-router.post(
-    '/:tripId/announcements/:announcementId/comments',
-    authMiddleware,
-    tripController.addAnnouncementComment
-  );
+router.post('/:tripId/announcements/:announcementId/comments', authMiddleware, tripController.addAnnouncementComment);
   router.get('/:tripId/messages/latest', authMiddleware, messagesController.getLatestMessages);
   router.get('/:tripId/notifications', authMiddleware, tripController.getNotifications);
-  router.get('/:tripId/activity-logs', authMiddleware, tripController.getActivityLogs);
   router.get('/:tripId/activity-logs', authMiddleware, tripController.getActivityLogs);
   router.post('/:tripId/resend-invite', authMiddleware, tripController.resendInvite);
   router.get('/:tripId/export', authMiddleware, tripController.exportTrip);

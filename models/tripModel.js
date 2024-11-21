@@ -53,10 +53,17 @@ const ItineraryItemSchema = new Schema({
   ]
 });
 
-const AnnouncementSchema = new Schema({
-  user: { type: Schema.Types.ObjectId, ref: 'User', required: true },
+const CommentSchema = new mongoose.Schema({
+  text: { type: String, required: true },
+  user: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
+  date: { type: Date, default: Date.now },
+});
+
+const AnnouncementSchema = new mongoose.Schema({
+  title: { type: String, required: true },
   message: { type: String, required: true },
-  timestamp: { type: Date, default: Date.now },
+  date: { type: Date, default: Date.now },
+  comments: [CommentSchema], // Array of comments
 });
 
 // Task Subdocument Schema

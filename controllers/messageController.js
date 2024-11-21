@@ -78,3 +78,28 @@ exports.reactToMessage = async (req, res) => {
   }
 };
 
+exports.getLatestMessages = async (req, res) => {
+  const { tripId } = req.params;
+  const limit = parseInt(req.query.limit, 10) || 10; // Default to 10 messages if limit not provided
+
+  try {
+    const trip = await Trip.findById(tripId).populate({
+      path: 'messages.user', // Assuming messages are associated with users
+      select: 'name email', // Fetch user name and email for each message
+    });
+
+    if (!trip) {
+      return res.status(404).json({ message: 'Trip not found.' });
+    }
+
+    // Sort messages by date and limit the number of messages
+    const latestMessages = trip.messages
+      .sort((a, b) => new Date(b.date) - new Date(a.date))
+      .slice(0, limit);
+
+    res.status(200).json(latestMessages);
+  } catch (error) {
+    console.error('Error fetching latest messages:', error);
+    res.status(500).json({ message: 'Failed to fetch latest messages.', error: error.message });
+  }
+};
