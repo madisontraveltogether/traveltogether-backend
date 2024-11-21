@@ -4,6 +4,8 @@ const authMiddleware = require('../middlewares/authMiddleware');
 const userController = require('../controllers/userController');
 
 const router = express.Router();
+app.options('*', cors(corsOptions)); // Handle preflight requests
+
 
 // User registration and login
 router.post('/register', authController.register);    // Public route

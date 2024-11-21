@@ -7,9 +7,17 @@ const path = require('path');
 const app = require('./app'); // Ensure `app.js` has correct configurations
 
 dotenv.config(); // Load .env variables
+app.options('*', cors(corsOptions)); // Handle preflight requests
 
 const corsOptions = {
-  origin: process.env.FRONTEND_URL || 'https://www.gettraveltogether.com',
+  origin: (origin, callback) => {
+    const allowedOrigins = [process.env.FRONTEND_URL, 'https://www.gettraveltogether.com'];
+    if (allowedOrigins.includes(origin) || !origin) {
+      callback(null, true);
+    } else {
+      callback(new Error('Not allowed by CORS'));
+    }
+  },
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH'],
   allowedHeaders: ['Content-Type', 'Authorization'],
   credentials: true,
@@ -20,7 +28,7 @@ app.use(cors(corsOptions));
 const server = http.createServer(app);
 const io = socketIo(server, {
   cors: {
-    origin: process.env.FRONTEND_URL || 'https://www.gettraveltogether.com',
+    origin:'https://www.gettraveltogether.com',
     methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH'],
     credentials: true,
   },
