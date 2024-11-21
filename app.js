@@ -17,7 +17,7 @@ connectDB();
 
 // Middleware
 app.use(express.json()); // JSON body parser
-app.use(cors()); // Enable CORS
+app.options('*', cors(corsOptions)); // Handle preflight requests
 app.use(morgan('dev')); // Logger for development
 
 // Routes
