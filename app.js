@@ -17,7 +17,16 @@ connectDB();
 
 // Middleware
 app.use(express.json()); // JSON body parser
-app.options('*', cors(corsOptions)); // Handle preflight requests
+const cors = require('cors');
+
+const corsOptions = {
+  origin: 'https://www.gettraveltogether.com', // Replace with your frontend URL
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH'],
+  allowedHeaders: ['Content-Type', 'Authorization'],
+  credentials: true, // Required for cookies, authorization headers, etc.
+};
+
+app.use(cors(corsOptions));
 app.use(morgan('dev')); // Logger for development
 
 // Routes
