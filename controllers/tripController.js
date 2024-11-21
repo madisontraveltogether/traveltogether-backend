@@ -4,6 +4,8 @@ const Trip = require('../models/tripModel');
 const User = require('../models/userModel');
 const multer = require('multer');
 const path = require('path');
+const sendMail = require('../services/mailService');
+const { generateInvitationLink } = require('../utils/invitationUtils'); 
 
 const storage = multer.diskStorage({
   destination: (req, file, cb) => {
@@ -246,31 +248,20 @@ exports.getGuestList = async (req, res) => {
 
 // **Invite User to Trip**
 exports.inviteUserToTrip = async (req, res) => {
-  const { tripId, userId } = req.params;
-
-  if (!validateObjectId(tripId) || !validateObjectId(userId)) {
-    return res.status(400).json({ message: 'Invalid ID format' });
-  }
+  const { tripId, email } = req.params;
 
   try {
     const trip = await Trip.findById(tripId);
-    const user = await User.findById(userId);
+    if (!trip) return res.status(404).json({ message: 'Trip not found' });
 
-    if (!trip || !user) return res.status(404).json({ message: 'Trip or user not found' });
+    const invitationLink = generateInvitationLink(tripId, email);
 
-    // Add user to the guest list if not already present
-    if (!trip.guests.some((guest) => guest.user.equals(userId))) {
-      trip.guests.push({ user: userId, rsvpStatus: 'pending', role: 'guest' });
-    }
+    // Send the email
+    const subject = `You're invited to join the trip: ${trip.name}`;
+    const text = `Hello,\n\nYou've been invited to join the trip: ${trip.name}.\nClick the link below to join:\n${invitationLink}`;
+    await sendMail(email, subject, text);
 
-    // Add trip to user's invited trips if not already present
-    if (!user.invitedTrips.includes(tripId)) {
-      user.invitedTrips.push(tripId);
-    }
-
-    await Promise.all([trip.save(), user.save()]);
-
-    res.status(200).json({ message: 'User invited successfully', trip, user });
+    res.status(200).json({ message: 'Invitation sent successfully' });
   } catch (error) {
     console.error('Error inviting user to trip:', error);
     res.status(500).json({ message: 'Server error', error: error.message });
