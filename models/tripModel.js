@@ -149,26 +149,8 @@ const TripSchema = new Schema({
     },
   ],
   inviteCode: { type: String, unique: true }, 
-
-TripSchema.pre('save', function (next) {
-  if (this.startDate && this.endDate) {
-    this.tripDates = generateTripDates(this.startDate, this.endDate);
-  }
-  next();
 });
 
-const generateTripDates = (startDate, endDate) => {
-  const dates = [];
-  const currentDate = new Date(startDate);
-  const end = new Date(endDate);
 
-  let day = 1;
-  while (currentDate <= end) {
-    dates.push(`Day ${day} - ${currentDate.toLocaleDateString()}`);
-    currentDate.setDate(currentDate.getDate() + 1);
-    day++;
-  }
-  return dates;
-};
 
 module.exports = mongoose.model('Trip', TripSchema);

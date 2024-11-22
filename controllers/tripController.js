@@ -614,3 +614,43 @@ exports.generateTripCode = async (req, res) => {
     res.status(500).json({ error: 'Failed to generate trip code' });
   }
 };
+
+exports.joinTripByCode = async (req, res) => {
+  try {
+    const { tripCode, userId } = req.body;
+
+    // Find the trip with the provided code
+    const trip = await Trip.findOne({ inviteCode: tripCode });
+    if (!trip) {
+      return res.status(404).json({ error: 'Invalid trip code.' });
+    }
+
+    // Check if the user is already part of the trip
+    if (trip.attendees.includes(userId)) {
+      return res.status(400).json({ error: 'You are already part of this trip.' });
+    }
+
+    // Add the user to the attendees
+    trip.attendees.push(userId);
+    await trip.save();
+
+    res.status(200).json({ tripId: trip._id });
+  } catch (error) {
+    console.error('Error joining trip by code:', error);
+    res.status(500).json({ error: 'Failed to join trip.' });
+  }
+};
+
+const generateTripDates = (startDate, endDate) => {
+  const dates = [];
+  const currentDate = new Date(startDate);
+  const end = new Date(endDate);
+
+  let day = 1;
+  while (currentDate <= end) {
+    dates.push(`Day ${day} - ${currentDate.toLocaleDateString()}`);
+    currentDate.setDate(currentDate.getDate() + 1);
+    day++;
+  }
+  return dates;
+};
