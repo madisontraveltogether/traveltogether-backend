@@ -325,6 +325,9 @@ exports.getGuestList = async (req, res) => {
 
 // **Invite User to Trip**
 exports.inviteUserToTrip = async (req, res) => {
+  console.log('Request body:', req.body);
+  console.log('Request params:', req.params);
+
   try {
     const { tripId } = req.params; // Extract the trip ID from the URL
     const { email } = req.body; // Extract the email from the request body
