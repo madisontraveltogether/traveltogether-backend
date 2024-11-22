@@ -35,7 +35,8 @@ router.post('/:tripId/announcements/:announcementId/comments', authMiddleware, t
   router.post('/:tripId/resend-invite', authMiddleware, tripController.resendInvite);
   router.get('/:tripId/export', authMiddleware, tripController.exportTrip);
   router.get('/:tripId/guests/filter', authMiddleware, tripController.getFilteredGuests);
-  
+  router.post('/:tripId/invite', authMiddleware, tripController.inviteUserToTrip);
+
 /**
  * Guest Routes
  */

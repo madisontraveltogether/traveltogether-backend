@@ -4,6 +4,8 @@ const Trip = require('../models/tripModel');
 const User = require('../models/userModel');
 const multer = require('multer');
 const path = require('path');
+const Invitation = require('../models/invitationModel');
+const { sendInvitationEmail } = require('../utils/emailUtils'); // Assuming emailUtils has the sendInvitationEmail function
 const sendMail = require('../services/mailService');
 const { generateInvitationLink } = require('../utils/invitationUtils'); 
 const PDFDocument = require('pdfkit');
@@ -323,22 +325,44 @@ exports.getGuestList = async (req, res) => {
 
 // **Invite User to Trip**
 exports.inviteUserToTrip = async (req, res) => {
-  const { tripId, email } = req.params;
+  const { tripId } = req.params;
+  const { email } = req.body;
 
   try {
-    const trip = await Trip.findById(tripId);
-    if (!trip) return res.status(404).json({ message: 'Trip not found' });
+    // Validate trip existence
+    const trip = await Trip.findById(tripId).populate('organizer', 'name email');
+    if (!trip) {
+      return res.status(404).json({ message: 'Trip not found' });
+    }
 
-    const invitationLink = generateInvitationLink(tripId, email);
+    // Prevent duplicate invitations
+    const existingInvitation = await Invitation.findOne({ trip: tripId, email });
+    if (existingInvitation) {
+      return res.status(400).json({ message: 'User already invited' });
+    }
 
-    // Send the email
-    const subject = `You're invited to join the trip: ${trip.name}`;
-    const text = `Hello,\n\nYou've been invited to join the trip: ${trip.name}.\nClick the link below to join:\n${invitationLink}`;
-    await sendMail(email, subject, text);
+    // Create the invitation
+    const invitation = new Invitation({
+      trip: tripId,
+      email,
+      status: 'pending',
+    });
+    await invitation.save();
 
-    res.status(200).json({ message: 'Invitation sent successfully' });
+    // Generate the invitation link
+    const invitationLink = `${process.env.FRONTEND_URL}/trips/${tripId}/join?email=${email}`;
+
+    // Send the invitation email
+    await sendInvitationEmail(
+      email,
+      trip.name,
+      trip.organizer.name,
+      invitationLink
+    );
+
+    res.status(200).json({ message: 'Invitation sent successfully', invitation });
   } catch (error) {
-    console.error('Error inviting user to trip:', error);
+    console.error('Error inviting user to trip:', error.message);
     res.status(500).json({ message: 'Server error', error: error.message });
   }
 };
