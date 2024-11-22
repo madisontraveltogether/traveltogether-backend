@@ -654,3 +654,28 @@ const generateTripDates = (startDate, endDate) => {
   }
   return dates;
 };
+
+exports.getInviteLink = async (req, res) => {
+  try {
+    const { tripId } = req.params;
+
+    // Fetch the trip
+    const trip = await Trip.findById(tripId);
+
+    if (!trip) {
+      return res.status(404).json({ error: "Trip not found" });
+    }
+
+    // Generate or return existing invite link
+    if (!trip.inviteLink) {
+      const baseUrl = process.env.FRONTEND_URL || "http://localhost:3000";
+      trip.inviteLink = `${baseUrl}/join/${tripId}`;
+      await trip.save();
+    }
+
+    res.status(200).json({ inviteLink: trip.inviteLink });
+  } catch (error) {
+    console.error("Error generating invite link:", error);
+    res.status(500).json({ error: "Failed to generate invite link" });
+  }
+};
