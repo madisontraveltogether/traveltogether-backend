@@ -325,45 +325,41 @@ exports.getGuestList = async (req, res) => {
 
 // **Invite User to Trip**
 exports.inviteUserToTrip = async (req, res) => {
-  const { tripId } = req.params;
-  const { email } = req.body;
-
   try {
-    // Validate trip existence
-    const trip = await Trip.findById(tripId).populate('organizer', 'name email');
-    if (!trip) {
-      return res.status(404).json({ message: 'Trip not found' });
+    const { tripId } = req.params; // Extract the trip ID from the URL
+    const { email } = req.body; // Extract the email from the request body
+    const organizerId = req.user.id; // Get the organizer's user ID from the authMiddleware (assumed)
+
+    // Validate the input
+    if (!email) {
+      return res.status(400).json({ error: 'Email is required to send an invitation.' });
     }
 
-    // Prevent duplicate invitations
+    // Check if an invitation already exists for this trip and email
     const existingInvitation = await Invitation.findOne({ trip: tripId, email });
     if (existingInvitation) {
-      return res.status(400).json({ message: 'User already invited' });
+      return res.status(400).json({ error: 'This email has already been invited to the trip.' });
     }
 
-    // Create the invitation
+    // Create a new invitation
     const invitation = new Invitation({
       trip: tripId,
       email,
-      status: 'pending',
+      status: 'Pending',
     });
+
     await invitation.save();
 
-    // Generate the invitation link
-    const invitationLink = `${process.env.FRONTEND_URL}/trips/${tripId}/join?email=${email}`;
+    // Generate an invitation link (customize as needed)
+    const invitationLink = `https://yourapp.com/trips/${tripId}/join?email=${encodeURIComponent(email)}`;
 
     // Send the invitation email
-    await sendInvitationEmail(
-      email,
-      trip.name,
-      trip.organizer.name,
-      invitationLink
-    );
+    await sendInvitationEmail(email, 'Trip Name', 'Organizer Name', invitationLink); // Replace "Trip Name" and "Organizer Name" dynamically if available
 
-    res.status(200).json({ message: 'Invitation sent successfully', invitation });
+    res.status(201).json({ message: 'Invitation sent successfully.' });
   } catch (error) {
     console.error('Error inviting user to trip:', error.message);
-    res.status(500).json({ message: 'Server error', error: error.message });
+    res.status(500).json({ error: 'Failed to send invitation.' });
   }
 };
 
