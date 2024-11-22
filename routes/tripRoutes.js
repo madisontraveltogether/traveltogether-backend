@@ -39,6 +39,7 @@ router.post('/:tripId/announcements/:announcementId/comments', authMiddleware, t
   router.post('/:tripId/generate-code', authMiddleware, tripController.generateTripCode);
   router.get('/:tripId/invite-link', authMiddleware, tripController.getInviteLink);
   router.post('/join', tripController.joinTripByCode);
+  router.get('/:tripId/code', authMiddleware, tripController.getTripCode);
 
 /**
  * Guest Routes

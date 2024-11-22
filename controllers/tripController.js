@@ -615,6 +615,23 @@ exports.generateTripCode = async (req, res) => {
   }
 };
 
+exports.getTripCode = async (req, res) => {
+  try {
+    const { tripId } = req.params;
+
+    const trip = await Trip.findById(tripId);
+
+    if (!trip) {
+      return res.status(404).json({ error: "Trip not found" });
+    }
+
+    res.status(200).json({ tripCode: trip.tripCode });
+  } catch (error) {
+    console.error("Error fetching trip code:", error);
+    res.status(500).json({ error: "Failed to fetch trip code" });
+  }
+};
+
 exports.joinTripByCode = async (req, res) => {
   try {
     const { tripCode, userId } = req.body;
