@@ -1,13 +1,14 @@
-const mailjet = require('node-mailjet').connect(
+const Mailjet = require('node-mailjet');
+
+// Initialize Mailjet with API credentials
+const mailjet = Mailjet.apiConnect(
   process.env.MAILJET_API_KEY,
   process.env.MAILJET_API_SECRET
 );
-
 // General function to send an email using Mailjet
 exports.sendEmail = async ({ toEmails, subject, textContent, htmlContent }) => {
-  // Format recipients list
   const recipients = Array.isArray(toEmails)
-    ? toEmails.map(email => ({ Email: email }))
+    ? toEmails.map((email) => ({ Email: email }))
     : [{ Email: toEmails }];
 
   const emailData = {
@@ -20,7 +21,7 @@ exports.sendEmail = async ({ toEmails, subject, textContent, htmlContent }) => {
         To: recipients,
         Subject: subject,
         TextPart: textContent,
-        HTMLPart: htmlContent || `<p>${textContent}</p>`, // HTML content or plain text as fallback
+        HTMLPart: htmlContent || `<p>${textContent}</p>`,
       },
     ],
   };
