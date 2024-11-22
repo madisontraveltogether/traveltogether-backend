@@ -5,8 +5,12 @@ const express = require('express');
 const cors = require('cors');
 const path = require('path');
 const app = require('./app'); // Ensure `app.js` has correct configurations
+const connectDB = require('./config/db');
 
 dotenv.config(); // Load .env variables
+
+// Connect to MongoDB
+connectDB();
 
 const corsOptions = {
   origin: (origin, callback) => {
@@ -21,23 +25,22 @@ const corsOptions = {
   allowedHeaders: ['Content-Type', 'Authorization'],
   credentials: true,
 };
-app.options('*', cors(corsOptions)); // Handle preflight requests
 
 app.use(cors(corsOptions));
 
 const server = http.createServer(app);
 const io = socketIo(server, {
   cors: {
-    origin:'https://www.gettraveltogether.com',
+    origin: 'https://www.gettraveltogether.com',
     methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH'],
     credentials: true,
   },
 });
 
-// Example: Initialize controllers with `io`
-const taskController = require('./controllers/taskController');
-taskController.initialize(io);
+// Attach io to app.locals to avoid circular dependencies
+app.locals.io = io;
 
+// Socket.IO event handling
 io.on('connection', (socket) => {
   console.log('New client connected:', socket.id);
 
@@ -51,9 +54,7 @@ io.on('connection', (socket) => {
   });
 });
 
+// Start the server
 server.listen(process.env.PORT || 5000, () => {
   console.log(`Server running on port ${process.env.PORT || 5000}`);
 });
-
-const connectDB = require('./config/db');
-connectDB(); // Connect to MongoDB
