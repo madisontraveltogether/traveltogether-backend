@@ -148,7 +148,7 @@ const TripSchema = new Schema({
       date: { type: Date, default: Date.now },
     },
   ],
-});
+  inviteCode: { type: String, unique: true }, 
 
 TripSchema.pre('save', function (next) {
   if (this.startDate && this.endDate) {
