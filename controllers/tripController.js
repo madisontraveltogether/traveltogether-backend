@@ -685,7 +685,7 @@ exports.getInviteLink = async (req, res) => {
 
     // Generate or return existing invite link
     if (!trip.inviteLink) {
-      const baseUrl = process.env.FRONTEND_URL || "http://localhost:3000";
+      const baseUrl = process.env.FRONTEND_URL || "https://gettraveltogether.com";
       trip.inviteLink = `${baseUrl}/join/${tripId}`;
       await trip.save();
     }
