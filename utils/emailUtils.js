@@ -1,35 +1,30 @@
-const Mailjet = require('node-mailjet');
+const nodemailer = require('nodemailer');
 
-// Initialize Mailjet with API credentials
-const mailjet = Mailjet.apiConnect(
-  process.env.MAILJET_API_KEY,
-  process.env.MAILJET_API_SECRET
-);
-// General function to send an email using Mailjet
+// Create a Nodemailer transporter
+const transporter = nodemailer.createTransport({
+  service: 'gmail', // or 'smtp.mailtrap.io', 'outlook', etc., depending on your email service
+  auth: {
+    user: process.env.EMAIL_FROM, // Your email
+    pass: process.env.EMAIL_PASSWORD, // Your email password or app-specific password
+  },
+});
+
+// General function to send an email using Nodemailer
 exports.sendEmail = async ({ toEmails, subject, textContent, htmlContent }) => {
-  const recipients = Array.isArray(toEmails)
-    ? toEmails.map((email) => ({ Email: email }))
-    : [{ Email: toEmails }];
+  const recipients = Array.isArray(toEmails) ? toEmails.join(', ') : toEmails;
 
-  const emailData = {
-    Messages: [
-      {
-        From: {
-          Email: process.env.EMAIL_FROM,
-          Name: process.env.EMAIL_NAME || "Your App Name",
-        },
-        To: recipients,
-        Subject: subject,
-        TextPart: textContent,
-        HTMLPart: htmlContent || `<p>${textContent}</p>`,
-      },
-    ],
+  const emailOptions = {
+    from: `"${process.env.EMAIL_NAME || 'Your App Name'}" <${process.env.EMAIL_FROM}>`,
+    to: recipients,
+    subject: subject,
+    text: textContent,
+    html: htmlContent || `<p>${textContent}</p>`,
   };
 
   try {
-    const request = await mailjet.post("send", { version: "v3.1" }).request(emailData);
-    console.log('Email sent successfully:', request.body);
-    return request.body;
+    const info = await transporter.sendMail(emailOptions);
+    console.log('Email sent successfully:', info.response);
+    return info.response;
   } catch (error) {
     console.error('Error sending email:', error.message);
     throw new Error('Failed to send email');
