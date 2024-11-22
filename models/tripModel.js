@@ -151,6 +151,4 @@ const TripSchema = new Schema({
   inviteCode: { type: String, unique: true }, 
 });
 
-
-
 module.exports = mongoose.model('Trip', TripSchema);
