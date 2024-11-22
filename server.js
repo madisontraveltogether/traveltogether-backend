@@ -6,6 +6,9 @@ const cors = require('cors');
 const path = require('path');
 const app = require('./app'); // Ensure `app.js` has correct configurations
 const connectDB = require('./config/db');
+const emailRoutes = require('./routes/emailRoutes');
+
+app.use('/api/email', emailRoutes);
 
 dotenv.config(); // Load .env variables
 
