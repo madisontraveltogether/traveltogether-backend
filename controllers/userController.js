@@ -85,13 +85,15 @@ exports.updateUserProfile = async (req, res) => {
 
 exports.getUserById = async (req, res) => {
   try {
-    const user = await User.findById(req.params.userId);
+    console.log("Fetching user with ID:", req.params.userId); // Debugging
+    const user = await User.findById(req.params.userId); // Ensure req.params.userId matches the route param
     if (!user) {
       return res.status(404).json({ message: "User not found" });
     }
-    res.status(200).json({ id: userId, name: user.name });
+    res.status(200).json({ id: user.id, name: user.name }); // Fixed `userId` to `user.id`
   } catch (error) {
     console.error("Error fetching user:", error);
     res.status(500).json({ message: "Server error" });
   }
 };
+
