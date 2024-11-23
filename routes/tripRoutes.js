@@ -40,7 +40,7 @@ router.post('/:tripId/announcements/:announcementId/comments', authMiddleware, t
   router.get('/:tripId/invite-link', authMiddleware, tripController.getInviteLink);
   router.post('/join', tripController.joinTripByCode);
   router.get('/:tripId/code', authMiddleware, tripController.getTripCode);
-  router.get("/users/:id", userController.getUserById);
+  router.get("/users/:userId", userController.getUserById);
   /**
  * Guest Routes
  */
