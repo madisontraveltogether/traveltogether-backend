@@ -108,6 +108,7 @@ const TripSchema = new Schema({
   location: { type: String, default: null }, // Optional field
   description: { type: String, default: '' }, // Optional field
   organizer: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
+  organizerName:{type: String, default: ''},
   guests: [GuestSchema], // Optional by default due to array nature
   collaborators: [{ type: Schema.Types.ObjectId, ref: 'User' }], // Optional field
   startDate: { type: Date, default: null }, // Optional field
