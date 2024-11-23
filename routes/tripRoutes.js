@@ -15,7 +15,6 @@ const { authenticateUser } = require('../middlewares/authMiddleware');
 const multer = require('multer');
 const upload = multer();
 const userController = require('../contollers/userController');
-
 const router = express.Router();
 
 
