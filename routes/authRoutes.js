@@ -12,9 +12,6 @@ router.get('/me', authMiddleware, authController.getUser); // Protected route
 router.post('/refresh-token', authController.refreshToken); // Public route, but requires a valid refresh token in the body
 router.post('/logout', authMiddleware, authController.logout); // Protected route
 router.patch('/profile/password', authMiddleware, authController.resetPassword);
-
-
-
 router.post('/profile/picture', authMiddleware, userController.uploadProfilePicture);
 router.patch('/profile', authMiddleware, userController.updateUserProfile);
 router.patch('/profile/preferences', authMiddleware, userController.updatePreferences);
