@@ -602,7 +602,7 @@ exports.generateTripCode = async (req, res) => {
     }
 
     // Generate a unique code
-    const tripCode = Math.random().toString(36).substr(2, 8).toUpperCase();
+    const tripCode = await generateUniqueCode();
 
     // Update the trip with the new code
     trip.inviteCode = tripCode;
@@ -612,6 +612,90 @@ exports.generateTripCode = async (req, res) => {
   } catch (error) {
     console.error('Error generating trip code:', error);
     res.status(500).json({ error: 'Failed to generate trip code' });
+  }
+};
+
+const generateUniqueCode = async () => {
+  let uniqueCode = "";
+  let exists = true;
+
+  while (exists) {
+    uniqueCode = Math.random().toString(36).substr(2, 8).toUpperCase();
+    exists = await Trip.exists({ inviteCode: uniqueCode });
+  }
+
+  return uniqueCode;
+};
+
+const generateUniqueCode = async () => {
+  let uniqueCode = "";
+  let exists = true;
+
+  while (exists) {
+    uniqueCode = Math.random().toString(36).substr(2, 8).toUpperCase();
+    exists = await Trip.exists({ inviteCode: uniqueCode });
+  }
+
+  return uniqueCode;
+};
+
+const generateUniqueCode = async () => {
+  let uniqueCode = "";
+  let exists = true;
+
+  while (exists) {
+    uniqueCode = Math.random().toString(36).substr(2, 8).toUpperCase();
+    exists = await Trip.exists({ inviteCode: uniqueCode });
+  }
+
+  return uniqueCode;
+};
+
+exports.generateTripCode = async (req, res) => {
+  try {
+    const { tripId } = req.params;
+
+    // Find the trip
+    const trip = await Trip.findById(tripId);
+    if (!trip) {
+      return res.status(404).json({ error: "Trip not found" });
+    }
+
+    // Generate a unique code
+    const tripCode = await generateUniqueCode();
+
+    // Update the trip with the new code
+    trip.inviteCode = tripCode;
+    await trip.save();
+
+    res.status(200).json({ tripCode });
+  } catch (error) {
+    console.error("Error generating trip code:", error);
+    res.status(500).json({ error: "Failed to generate trip code" });
+  }
+};
+
+exports.generateTripCode = async (req, res) => {
+  try {
+    const { tripId } = req.params;
+
+    // Find the trip
+    const trip = await Trip.findById(tripId);
+    if (!trip) {
+      return res.status(404).json({ error: "Trip not found" });
+    }
+
+    // Generate a unique code
+    const tripCode = await generateUniqueCode();
+
+    // Update the trip with the new code
+    trip.inviteCode = tripCode;
+    await trip.save();
+
+    res.status(200).json({ tripCode });
+  } catch (error) {
+    console.error("Error generating trip code:", error);
+    res.status(500).json({ error: "Failed to generate trip code" });
   }
 };
 
@@ -633,30 +717,28 @@ exports.getTripCode = async (req, res) => {
 };
 
 exports.joinTripByCode = async (req, res) => {
+  const { code } = req.body;
+
   try {
-    const { tripCode, userId } = req.body;
+    const trip = await Trip.findOne({ inviteCode: code });
+    if (!trip) return res.status(404).json({ message: "Invalid code" });
 
-    // Find the trip with the provided code
-    const trip = await Trip.findOne({ inviteCode: tripCode });
-    if (!trip) {
-      return res.status(404).json({ error: 'Invalid trip code.' });
+    const user = req.user; // Assuming you have user authentication middleware
+    const alreadyJoined = trip.guests.some((guest) => guest.user.toString() === user.id);
+
+    if (!alreadyJoined) {
+      trip.guests.push({ user: user.id, rsvpStatus: "pending" });
+      await trip.save();
     }
 
-    // Check if the user is already part of the trip
-    if (trip.attendees.includes(userId)) {
-      return res.status(400).json({ error: 'You are already part of this trip.' });
-    }
-
-    // Add the user to the attendees
-    trip.attendees.push(userId);
-    await trip.save();
-
-    res.status(200).json({ tripId: trip._id });
+    res.status(200).json({ message: "You have joined the trip", trip });
   } catch (error) {
-    console.error('Error joining trip by code:', error);
-    res.status(500).json({ error: 'Failed to join trip.' });
+    console.error("Error joining trip:", error);
+    res.status(500).json({ message: "Server error", error: error.message });
   }
 };
+
+
 
 const generateTripDates = (startDate, endDate) => {
   const dates = [];
@@ -675,24 +757,12 @@ const generateTripDates = (startDate, endDate) => {
 exports.getInviteLink = async (req, res) => {
   try {
     const { tripId } = req.params;
-
-    // Fetch the trip
     const trip = await Trip.findById(tripId);
+    if (!trip) return res.status(404).json({ message: "Trip not found" });
 
-    if (!trip) {
-      return res.status(404).json({ error: "Trip not found" });
-    }
-
-    // Generate or return existing invite link
-    if (!trip.inviteLink) {
-      const baseUrl = process.env.FRONTEND_URL || "https://gettraveltogether.com";
-      trip.inviteLink = `${baseUrl}/join/${tripId}`;
-      await trip.save();
-    }
-
-    res.status(200).json({ inviteLink: trip.inviteLink });
+    const inviteLink = `https://yourwebsite.com/trips/join?code=${trip.inviteCode}`;
+    res.status(200).json({ inviteLink });
   } catch (error) {
-    console.error("Error generating invite link:", error);
-    res.status(500).json({ error: "Failed to generate invite link" });
+    res.status(500).json({ message: "Server error", error: error.message });
   }
 };
