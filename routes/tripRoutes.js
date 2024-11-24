@@ -71,6 +71,11 @@ router.get('/:tripId/expenses/:expenseId', authMiddleware, expenseController.get
 router.patch('/:tripId/expenses/:expenseId', authMiddleware, expenseController.updateExpense);
 router.delete('/:tripId/expenses/:expenseId', authMiddleware, expenseController.deleteExpense);
 router.get('/:tripId/balances', authMiddleware, expenseController.getBalances);
+router.get('/:tripId/expenses/tags', authMiddleware, expenseController.getExpensesByTags);
+router.get('/:tripId/expenses/export', authMiddleware, expenseController.exportExpenses);
+router.post('/:tripId/expenses/batch-delete', authMiddleware, expenseController.batchDeleteExpenses);
+router.post('/:tripId/expenses/filter', authMiddleware, expenseController.filterExpenses); // For dynamic querying
+
 
 /**
  * Task Routes
@@ -85,6 +90,10 @@ router.delete('/:tripId/tasks/:taskId', authMiddleware, taskController.deleteTas
 router.post('/:tripId/tasks/:taskId/comments', authMiddleware, taskController.addTaskComment);
 router.get('/:tripId/tasks/:taskId/comments', authMiddleware, taskController.getTaskComments);
 router.get('/:tripId/tasks/progress', authMiddleware, taskController.getTripProgress);
+router.post('/:tripId/tasks/filter', authMiddleware, taskController.filterTasks); // Dynamic querying and filters
+router.post('/:tripId/tasks/batch-delete', authMiddleware, taskController.batchDeleteTasks);
+router.get('/:tripId/tasks/notifications', authMiddleware, notificationController.getTaskNotifications);
+router.patch('/tasks/notifications/:notificationId', authMiddleware, notificationController.markAsRead);
 
 /**
  * Poll Routes
@@ -119,6 +128,14 @@ router.get('/:tripId/itinerary', authMiddleware, itineraryController.getItinerar
 router.post('/:tripId/itinerary/suggestions', authMiddleware, itineraryController.addSuggestion);
 router.post('/:tripId/itinerary/suggestions/:suggestionId/vote', authMiddleware, itineraryController.voteOnSuggestion);
 router.delete('/:tripId/itinerary/:itemId', authMiddleware, itineraryController.deleteItineraryItem);
+router.get('/:tripId/itinerary/tags', authMiddleware, itineraryController.getItineraryByTags);
+router.get('/:tripId/itinerary/export', authMiddleware, itineraryController.exportToCalendar);
+router.post('/:tripId/itinerary/filter', authMiddleware, itineraryController.filterItinerary); // Dynamic filters
+router.get('/:tripId/itinerary/notifications', authMiddleware, notificationController.getItineraryNotifications);
+router.patch('/itinerary/notifications/:notificationId', authMiddleware, notificationController.markAsRead);
+router.post('/:tripId/itinerary/batch-delete', authMiddleware, itineraryController.batchDeleteItineraryItems);
+router.post('/:tripId/itinerary/integrations/google-calendar', authMiddleware, itineraryController.syncToGoogleCalendar);
+
 
 /**
  * Settings Routes

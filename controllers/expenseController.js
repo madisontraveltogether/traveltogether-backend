@@ -4,7 +4,7 @@ const mongoose = require('mongoose');
 
 exports.createExpense = async (req, res) => {
   const { tripId } = req.params;
-  const { title, amount, payer, splitType, splitWith, date, description } = req.body;
+  const { title, amount, payer, splitType, splitWith, date, description, tags, currency } = req.body;
 
   try {
     // Validate required fields
@@ -17,29 +17,57 @@ exports.createExpense = async (req, res) => {
       return res.status(404).json({ message: 'Trip not found' });
     }
 
-    // Perform split calculations if splitType and splitWith are provided
-    let calculatedSplitWith = [];
-    if (splitType && splitWith) {
+    // Validate payer and splitWith users
+    const validUsers = trip.guests
+      .concat(trip.collaborators)
+      .concat(trip.organizer.toString());
+
+    if (!validUsers.includes(payer)) {
+      return res.status(400).json({ message: 'Payer is not part of this trip' });
+    }
+
+    if (splitWith && splitWith.length) {
+      splitWith.forEach((user) => {
+        if (!validUsers.includes(user.userId.toString())) {
+          throw new Error(`User ${user.userId} is not part of this trip`);
+        }
+      });
+    }
+
+    // Default splitWith to all attendees who RSVP'd "yes"
+    const defaultSplitWith = trip.guests
+      .filter((guest) => guest.rsvpStatus === 'yes')
+      .map((guest) => ({ userId: guest._id.toString(), amount: 0 }));
+
+    // Perform split calculations
+    let calculatedSplitWith = splitWith?.length
+      ? splitWith
+      : calculateEvenSplit(amount, defaultSplitWith);
+
+    if (splitType) {
       switch (splitType) {
         case 'even':
-          calculatedSplitWith = calculateEvenSplit(amount, splitWith);
+          calculatedSplitWith = calculateEvenSplit(amount, splitWith || defaultSplitWith);
           break;
         case 'byAmount':
           validateTotalSplit(amount, splitWith);
           calculatedSplitWith = splitWith; // Already validated
           break;
         case 'byPercentage':
-          calculatedSplitWith = calculatePercentageSplit(amount, splitWith);
+          calculatedSplitWith = calculatePercentageSplit(amount, splitWith || defaultSplitWith);
           break;
         case 'byShares':
-          calculatedSplitWith = calculateShareSplit(amount, splitWith);
+          calculatedSplitWith = calculateShareSplit(amount, splitWith || defaultSplitWith);
           break;
         default:
           return res.status(400).json({ message: 'Invalid split type' });
       }
-    } else {
-      // If no splitType or splitWith, the payer takes on the full expense
-      calculatedSplitWith = [{ userId: payer, amount }];
+    }
+
+    // Handle file attachments if provided
+    let attachmentUrl = '';
+    if (req.file) {
+      attachmentUrl = req.file.location || `/uploads/${req.file.filename}`;
     }
 
     // Create the expense
@@ -47,15 +75,21 @@ exports.createExpense = async (req, res) => {
       title,
       amount,
       payer,
-      splitType: splitType || 'self', // Default to 'self' when no split
+      splitType: splitType || 'self',
       splitWith: calculatedSplitWith,
-      date: date || new Date(), // Default to current date
-      description: description || '', // Default to empty description
+      date: date || new Date(),
+      description: description || '',
+      tags: tags || [],
+      currency: currency || 'USD',
+      attachment: attachmentUrl || null,
     };
 
     // Add the expense to the trip
     trip.expenses.push(expense);
     await trip.save();
+
+    // Notify relevant users
+    io?.to(tripId).emit('expenseCreated', expense);
 
     res.status(201).json(expense);
   } catch (error) {
@@ -63,6 +97,7 @@ exports.createExpense = async (req, res) => {
     res.status(500).json({ message: 'Server error', error: error.message });
   }
 };
+
 
 
 exports.getExpenses = async (req, res) => {
@@ -149,6 +184,47 @@ exports.getBalances = async (req, res) => {
   } catch (error) {
     console.error('Error fetching balances:', error);
     res.status(500).json({ message: 'Server error', error: error.message });
+  }
+};
+
+const { Parser } = require('json2csv');
+
+exports.exportExpenses = async (req, res) => {
+  const { tripId } = req.params;
+
+  try {
+    const expenses = await Expense.find({ tripId });
+
+    const fields = ['title', 'amount', 'splitWith', 'date', 'description', 'tags', 'currency'];
+    const json2csvParser = new Parser({ fields });
+    const csv = json2csvParser.parse(expenses);
+
+    res.setHeader('Content-Type', 'text/csv');
+    res.setHeader('Content-Disposition', 'attachment; filename=expenses.csv');
+    res.status(200).send(csv);
+  } catch (err) {
+    console.error('Error exporting expenses:', err);
+    res.status(500).json({ error: 'Failed to export expenses.' });
+  }
+};
+
+exports.searchItinerary = async (req, res) => {
+  const { tripId } = req.params;
+  const { query } = req.query;
+
+  try {
+    const itinerary = await Itinerary.find({
+      tripId,
+      $or: [
+        { title: new RegExp(query, 'i') },
+        { description: new RegExp(query, 'i') },
+      ],
+    });
+
+    res.status(200).json(itinerary);
+  } catch (err) {
+    console.error('Error searching itinerary:', err);
+    res.status(500).json({ error: 'Failed to search itinerary.' });
   }
 };
 
@@ -322,5 +398,22 @@ exports.deleteComment = async (req, res) => {
   } catch (error) {
     console.error('Error deleting comment:', error);
     res.status(500).json({ message: 'Server error', error: error.message });
+  }
+};
+
+exports.getExpensesByTags = async (req, res) => {
+  const { tripId } = req.params;
+  const { tags } = req.query; // Expect tags to be comma-separated
+
+  try {
+    const expenses = await Expense.find({
+      tripId,
+      tags: { $in: tags.split(',') },
+    });
+
+    res.status(200).json(expenses);
+  } catch (err) {
+    console.error('Error filtering expenses by tags:', err);
+    res.status(500).json({ error: 'Failed to filter expenses by tags.' });
   }
 };
