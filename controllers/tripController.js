@@ -702,7 +702,7 @@ exports.getInviteLink = async (req, res) => {
     const trip = await Trip.findById(tripId);
     if (!trip) return res.status(404).json({ message: "Trip not found" });
 
-    const inviteLink = `https://yourwebsite.com/trips/join?code=${trip.inviteCode}`;
+    const inviteLink = `https://gettraveltogether.com/trips/join?code=${trip.inviteCode}`;
     res.status(200).json({ inviteLink });
   } catch (error) {
     res.status(500).json({ message: "Server error", error: error.message });
