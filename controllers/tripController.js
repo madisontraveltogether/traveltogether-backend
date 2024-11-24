@@ -615,42 +615,6 @@ exports.generateTripCode = async (req, res) => {
   }
 };
 
-const generateUniqueCode = async () => {
-  let uniqueCode = "";
-  let exists = true;
-
-  while (exists) {
-    uniqueCode = Math.random().toString(36).substr(2, 8).toUpperCase();
-    exists = await Trip.exists({ inviteCode: uniqueCode });
-  }
-
-  return uniqueCode;
-};
-
-const generateUniqueCode = async () => {
-  let uniqueCode = "";
-  let exists = true;
-
-  while (exists) {
-    uniqueCode = Math.random().toString(36).substr(2, 8).toUpperCase();
-    exists = await Trip.exists({ inviteCode: uniqueCode });
-  }
-
-  return uniqueCode;
-};
-
-const generateUniqueCode = async () => {
-  let uniqueCode = "";
-  let exists = true;
-
-  while (exists) {
-    uniqueCode = Math.random().toString(36).substr(2, 8).toUpperCase();
-    exists = await Trip.exists({ inviteCode: uniqueCode });
-  }
-
-  return uniqueCode;
-};
-
 exports.generateTripCode = async (req, res) => {
   try {
     const { tripId } = req.params;
