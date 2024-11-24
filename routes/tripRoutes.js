@@ -41,7 +41,6 @@ router.get('/:tripId/notifications', authMiddleware, tripController.getNotificat
 router.get('/:tripId/activity-logs', authMiddleware, tripController.getActivityLogs); // Get activity logs for a trip
 
 // Messaging
-router.get('/:tripId/messages/latest', authMiddleware, tripController.getLatestMessages); // Get latest messages for a trip
 
 // Guests and attendees
 router.get('/:tripId/guests/filter', authMiddleware, tripController.getFilteredGuests); // Get guests based on filters
@@ -99,6 +98,7 @@ router.get('/:tripId/polls/:pollId/results', authMiddleware, pollController.getP
  */
 router.post('/:tripId/messages', authMiddleware, messageController.sendMessage);
 router.get('/:tripId/messages', authMiddleware, messageController.getMessages);
+router.get('/:tripId/messages/latest', authMiddleware, messageController.getLatestMessages); // Get latest messages for a trip
 
 /**
  * Announcement Routes
