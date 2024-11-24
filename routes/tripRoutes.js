@@ -25,21 +25,34 @@ router.get('/:tripId', authMiddleware, tripController.getTripById);
 router.patch('/:tripId', authMiddleware, tripController.updateTrip);
 router.delete('/:tripId', authMiddleware, tripController.deleteTrip);
 router.post('/', authMiddleware, tripController.createTrip);
-router.post('/:tripId/notify', authMiddleware, tripController.notifyAllAttendees);
-router.post('/:tripId/announcements/pin', authMiddleware, tripController.pinAnnouncement);
-router.post('/:tripId/announcements/:announcementId/comments', authMiddleware, tripController.addAnnouncementComment);
-  router.get('/:tripId/messages/latest', authMiddleware, messageController.getLatestMessages);
-  router.get('/:tripId/notifications', authMiddleware, tripController.getNotifications);
-  router.get('/:tripId/activity-logs', authMiddleware, tripController.getActivityLogs);
-  router.post('/:tripId/resend-invite', authMiddleware, tripController.resendInvite);
-  router.get('/:tripId/export', authMiddleware, tripController.exportTrip);
-  router.get('/:tripId/guests/filter', authMiddleware, tripController.getFilteredGuests);
-  router.post('/:tripId/invite', authMiddleware, tripController.inviteUserToTrip);
-  router.post('/:tripId/generate-code', authMiddleware, tripController.generateTripCode);
-  router.get('/:tripId/invite-link', authMiddleware, tripController.getInviteLink);
-  router.post('/join', tripController.joinTripByCode);
-  router.get('/:tripId/code', authMiddleware, tripController.getTripCode);
-  router.get("/users/:userId", userController.getUserById);
+
+// Invite system routes
+router.post('/:tripId/generate-code', authMiddleware, tripController.generateTripCode); // Generate a unique invite code for a trip
+router.get('/:tripId/invite-link', authMiddleware, tripController.getInviteLink); // Fetch the invite link for a trip
+router.get('/:tripId/code', authMiddleware, tripController.getTripCode); // Get the invite code for a trip
+router.post('/:tripId/invite', authMiddleware, tripController.inviteUserToTrip); // Invite a user to a trip by email
+router.post('/join', tripController.joinTripByCode); // Join a trip using an invite code (no auth required)
+
+//notifications, announcements, and logs
+router.post('/:tripId/notify', authMiddleware, tripController.notifyAllAttendees); // Notify all attendees
+router.post('/:tripId/announcements/pin', authMiddleware, tripController.pinAnnouncement); // Pin an announcement
+router.post('/:tripId/announcements/:announcementId/comments', authMiddleware, tripController.addAnnouncementComment); // Add a comment to an announcement
+router.get('/:tripId/notifications', authMiddleware, tripController.getNotifications); // Get notifications for a trip
+router.get('/:tripId/activity-logs', authMiddleware, tripController.getActivityLogs); // Get activity logs for a trip
+
+// Messaging
+router.get('/:tripId/messages/latest', authMiddleware, tripController.getLatestMessages); // Get latest messages for a trip
+
+// Guests and attendees
+router.get('/:tripId/guests/filter', authMiddleware, tripController.getFilteredGuests); // Get guests based on filters
+router.post('/:tripId/resend-invite', authMiddleware, tripController.resendInvite); // Resend invitation to a user
+
+// Export trip
+router.get('/:tripId/export', authMiddleware, tripController.exportTrip); // Export trip details
+
+// User routes
+router.get('/users/:userId', userController.getUserById); // Get user details by userId
+
   /**
  * Guest Routes
  */
