@@ -16,6 +16,7 @@ const multer = require('multer');
 const upload = multer();
 const userController = require('../controllers/userController');
 const router = express.Router();
+const { validateTask } = require('../middleware/taskValidation');
 
 /**
  * Trip Routes
@@ -81,6 +82,9 @@ router.patch('/:tripId/tasks/:taskId', authMiddleware, taskController.updateTask
 router.patch('/:tripId/tasks/:taskId/status', authMiddleware, taskController.updateTaskStatus);
 router.patch('/:tripId/tasks/:taskId/assign', authMiddleware, taskController.assignTask);
 router.delete('/:tripId/tasks/:taskId', authMiddleware, taskController.deleteTask);
+router.post('/:tripId/tasks/:taskId/comments', authMiddleware, taskController.addTaskComment);
+router.get('/:tripId/tasks/:taskId/comments', authMiddleware, taskController.getTaskComments);
+router.get('/:tripId/tasks/progress', authMiddleware, taskController.getTripProgress);
 
 /**
  * Poll Routes
