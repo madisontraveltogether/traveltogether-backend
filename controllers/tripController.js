@@ -651,28 +651,28 @@ const generateUniqueCode = async () => {
   return uniqueCode;
 };
 
-exports.generateTripCode = async (req, res) => {
-  try {
-    const { tripId } = req.params;
+const generateUniqueCode = async () => {
+  let uniqueCode = "";
+  let exists = true;
 
-    // Find the trip
-    const trip = await Trip.findById(tripId);
-    if (!trip) {
-      return res.status(404).json({ error: "Trip not found" });
-    }
-
-    // Generate a unique code
-    const tripCode = await generateUniqueCode();
-
-    // Update the trip with the new code
-    trip.inviteCode = tripCode;
-    await trip.save();
-
-    res.status(200).json({ tripCode });
-  } catch (error) {
-    console.error("Error generating trip code:", error);
-    res.status(500).json({ error: "Failed to generate trip code" });
+  while (exists) {
+    uniqueCode = Math.random().toString(36).substr(2, 8).toUpperCase();
+    exists = await Trip.exists({ inviteCode: uniqueCode });
   }
+
+  return uniqueCode;
+};
+
+const generateUniqueCode = async () => {
+  let uniqueCode = "";
+  let exists = true;
+
+  while (exists) {
+    uniqueCode = Math.random().toString(36).substr(2, 8).toUpperCase();
+    exists = await Trip.exists({ inviteCode: uniqueCode });
+  }
+
+  return uniqueCode;
 };
 
 exports.generateTripCode = async (req, res) => {
