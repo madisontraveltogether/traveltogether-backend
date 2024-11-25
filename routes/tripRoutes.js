@@ -17,6 +17,7 @@ const upload = multer();
 const userController = require('../controllers/userController');
 const router = express.Router();
 const { validateTask } = require('../middlewares/taskValidation');
+const notificationController = ('../controllers/notificationController')
 
 /**
  * Trip Routes
