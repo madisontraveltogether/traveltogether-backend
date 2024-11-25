@@ -439,3 +439,39 @@ exports.batchDeleteExpenses = async (req, res) => {
     res.status(500).json({ message: "Failed to delete expenses", error: error.message });
   }
 };
+
+exports.filterExpenses = async (req, res) => {
+  const { tripId } = req.params;
+  const { minAmount, maxAmount, type, date } = req.query;
+
+  try {
+    const trip = await Trip.findById(tripId);
+    if (!trip) {
+      return res.status(404).json({ message: "Trip not found" });
+    }
+
+    let filteredExpenses = trip.expenses;
+
+    // Apply filters
+    if (minAmount) {
+      filteredExpenses = filteredExpenses.filter(expense => expense.amount >= parseFloat(minAmount));
+    }
+    if (maxAmount) {
+      filteredExpenses = filteredExpenses.filter(expense => expense.amount <= parseFloat(maxAmount));
+    }
+    if (type) {
+      filteredExpenses = filteredExpenses.filter(expense => expense.type === type);
+    }
+    if (date) {
+      const targetDate = new Date(date).toISOString().split("T")[0];
+      filteredExpenses = filteredExpenses.filter(
+        expense => new Date(expense.date).toISOString().split("T")[0] === targetDate
+      );
+    }
+
+    res.status(200).json(filteredExpenses);
+  } catch (error) {
+    console.error("Error filtering expenses:", error);
+    res.status(500).json({ message: "Failed to filter expenses", error: error.message });
+  }
+};

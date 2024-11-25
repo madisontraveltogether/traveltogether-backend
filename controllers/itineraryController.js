@@ -148,3 +148,47 @@ exports.batchDeleteItineraryItems = async (req, res) => {
     res.status(500).json({ message: "Failed to delete itinerary items", error: error.message });
   }
 };
+
+exports.filterItineraryItems = async (req, res) => {
+  const { tripId } = req.params;
+  const { tags, day, startTimeRange } = req.query; // Filter criteria
+
+  try {
+    const trip = await Trip.findById(tripId);
+    if (!trip) {
+      return res.status(404).json({ message: "Trip not found" });
+    }
+
+    let filteredItems = trip.itinerary;
+
+    // Filter by tags
+    if (tags) {
+      const tagsArray = tags.split(",");
+      filteredItems = filteredItems.filter(item =>
+        item.tags.some(tag => tagsArray.includes(tag))
+      );
+    }
+
+    // Filter by day
+    if (day) {
+      filteredItems = filteredItems.filter(item => item.day === day);
+    }
+
+    // Filter by start time range
+    if (startTimeRange) {
+      const [start, end] = startTimeRange.split(",");
+      filteredItems = filteredItems.filter(item => {
+        const itemStartTime = new Date(item.startTime);
+        return (
+          (!start || itemStartTime >= new Date(start)) &&
+          (!end || itemStartTime <= new Date(end))
+        );
+      });
+    }
+
+    res.status(200).json(filteredItems);
+  } catch (error) {
+    console.error("Error filtering itinerary items:", error);
+    res.status(500).json({ message: "Server error", error: error.message });
+  }
+};

@@ -266,3 +266,35 @@ exports.batchDeleteTasks = async (req, res) => {
     res.status(500).json({ message: "Failed to delete tasks", error: error.message });
   }
 };
+
+exports.filterTasks = async (req, res) => {
+  const { tripId } = req.params;
+  const { status, priority, assignedTo } = req.query;
+
+  try {
+    const trip = await Trip.findById(tripId);
+    if (!trip) {
+      return res.status(404).json({ message: "Trip not found" });
+    }
+
+    let filteredTasks = trip.tasks;
+
+    // Apply filters
+    if (status) {
+      filteredTasks = filteredTasks.filter(task => task.status === status);
+    }
+    if (priority) {
+      filteredTasks = filteredTasks.filter(task => task.priority === priority);
+    }
+    if (assignedTo) {
+      filteredTasks = filteredTasks.filter(task =>
+        task.assignedTo.some(userId => userId.toString() === assignedTo)
+      );
+    }
+
+    res.status(200).json(filteredTasks);
+  } catch (error) {
+    console.error("Error filtering tasks:", error);
+    res.status(500).json({ message: "Failed to filter tasks", error: error.message });
+  }
+};
