@@ -78,17 +78,19 @@ const TaskSchema = new mongoose.Schema({
 });
 
 const PollOptionSchema = new mongoose.Schema({
-  text: { type: String, required: true },
-  votes: [{ type: mongoose.Schema.Types.ObjectId, ref: 'User', default: [] }] // Array of ObjectIds
+  text: String,
+  votes: [{ type: Schema.Types.ObjectId, ref: 'User' }], // For named voting
 });
 
 const PollSchema = new mongoose.Schema({
-  question: { type: String, required: true },
+  tripId: { type: mongoose.Schema.Types.ObjectId, ref: 'Trip' },
+  question: String,
   options: [PollOptionSchema],
   expirationDate: Date,
+  isAnonymous: { type: Boolean, default: false },
   maxVotesPerUser: { type: Number, default: 1 },
-  createdAt: { type: Date, default: Date.now }
 });
+
 
 const GuestSchema = new Schema({
   user: { type: Schema.Types.ObjectId, ref: 'User', required: true }, // Reference to User

@@ -69,13 +69,30 @@ exports.deletePoll = async (req, res) => {
 // Vote on a poll option
 exports.voteOnPoll = async (req, res) => {
   const { tripId, pollId, optionId } = req.params;
-  const userId = req.user.userId; // Assuming user ID is available from authentication
+  const userId = req.user?.userId; // Only set if the poll is not anonymous
 
   try {
-    const poll = await pollService.voteOnPoll(tripId, pollId, optionId, userId);
+    const poll = await Poll.findOne({ _id: pollId, tripId });
+
+    if (new Date(poll.expirationDate) < new Date()) {
+      return res.status(400).json({ message: 'This poll has expired.' });
+    }
+
+    if (!poll.isAnonymous) {
+      // Prevent double voting for named polls
+      const hasVoted = poll.options.some((option) => option.votes.includes(userId));
+      if (hasVoted) {
+        return res.status(400).json({ message: 'You have already voted.' });
+      }
+      poll.options.id(optionId).votes.push(userId);
+    } else {
+      poll.options.id(optionId).votes.push(null); // Anonymous votes
+    }
+
+    await poll.save();
     res.status(200).json(poll);
   } catch (error) {
-    res.status(400).json({ message: error.message });
+    res.status(500).json({ message: 'Error voting on poll.' });
   }
 };
 
