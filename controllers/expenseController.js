@@ -417,3 +417,25 @@ exports.getExpensesByTags = async (req, res) => {
     res.status(500).json({ error: 'Failed to filter expenses by tags.' });
   }
 };
+
+exports.batchDeleteExpenses = async (req, res) => {
+  const { tripId } = req.params;
+  const { expenseIds } = req.body; // Array of expense IDs to delete
+
+  try {
+    const trip = await Trip.findById(tripId);
+    if (!trip) {
+      return res.status(404).json({ message: "Trip not found" });
+    }
+
+    // Filter out expenses that should not be deleted
+    trip.expenses = trip.expenses.filter(expense => !expenseIds.includes(expense._id.toString()));
+
+    await trip.save();
+
+    res.status(200).json({ message: "Expenses deleted successfully", remainingExpenses: trip.expenses });
+  } catch (error) {
+    console.error("Error in batchDeleteExpenses:", error);
+    res.status(500).json({ message: "Failed to delete expenses", error: error.message });
+  }
+};

@@ -126,3 +126,25 @@ exports.deleteItineraryItem = async (req, res) => {
     res.status(500).json({ message: 'Server error', error: error.message });
   }
 };
+
+exports.batchDeleteItineraryItems = async (req, res) => {
+  const { tripId } = req.params;
+  const { itemIds } = req.body; // Array of itinerary item IDs to delete
+
+  try {
+    const trip = await Trip.findById(tripId);
+    if (!trip) {
+      return res.status(404).json({ message: "Trip not found" });
+    }
+
+    // Filter out itinerary items that should not be deleted
+    trip.itinerary = trip.itinerary.filter(item => !itemIds.includes(item._id.toString()));
+
+    await trip.save();
+
+    res.status(200).json({ message: "Itinerary items deleted successfully", remainingItems: trip.itinerary });
+  } catch (error) {
+    console.error("Error in batchDeleteItineraryItems:", error);
+    res.status(500).json({ message: "Failed to delete itinerary items", error: error.message });
+  }
+};

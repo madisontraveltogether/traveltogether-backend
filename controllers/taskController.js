@@ -244,3 +244,25 @@ exports.checkUpcomingTasks = async () => {
     });
   }
 };
+
+exports.batchDeleteTasks = async (req, res) => {
+  const { tripId } = req.params;
+  const { taskIds } = req.body; // Array of task IDs to delete
+
+  try {
+    const trip = await Trip.findById(tripId);
+    if (!trip) {
+      return res.status(404).json({ message: "Trip not found" });
+    }
+
+    // Filter out tasks that should not be deleted
+    trip.tasks = trip.tasks.filter(task => !taskIds.includes(task._id.toString()));
+
+    await trip.save();
+
+    res.status(200).json({ message: "Tasks deleted successfully", remainingTasks: trip.tasks });
+  } catch (error) {
+    console.error("Error in batchDeleteTasks:", error);
+    res.status(500).json({ message: "Failed to delete tasks", error: error.message });
+  }
+};
