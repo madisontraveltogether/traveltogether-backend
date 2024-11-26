@@ -18,7 +18,7 @@ const userController = require('../controllers/userController');
 const router = express.Router();
 const { validateTask } = require('../middlewares/taskValidation');
 const notificationController = require('../controllers/notificationController');
-console.log(notificationController);
+
 /**
  * Trip Routes
  */
