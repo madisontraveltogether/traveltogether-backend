@@ -1,59 +1,42 @@
-const Notification = require('../models/notificationModel');
 const Trip = require('../models/tripModel');
 
-// Create a new notification
-exports.createNotification = async (tripId, type, payload, userIds = []) => {
-  const notifications = userIds.map((userId) => ({
-    tripId,
-    type,
-    payload,
-    userId,
-    read: false,
-    createdAt: new Date(),
-  }));
-
-  const createdNotifications = await Notification.insertMany(notifications);
-  return createdNotifications;
-};
-
-// Fetch notifications by trip
+// Get notifications for a trip
 exports.getNotificationsByTrip = async (tripId) => {
-  const notifications = await Notification.find({ tripId }).sort({ createdAt: -1 });
-  return notifications;
+  const trip = await Trip.findById(tripId);
+  if (!trip) throw new Error('Trip not found');
+  return trip.notifications || [];
 };
 
-// Fetch notifications for a specific user
-exports.getNotificationsByUser = async (userId) => {
-  const notifications = await Notification.find({ userId }).sort({ createdAt: -1 });
-  return notifications;
+// Get task-specific notifications
+exports.getTaskNotifications = async (tripId, userId) => {
+  const notifications = await this.getNotificationsByTrip(tripId);
+  return notifications.filter((n) => n.type === 'task' && n.userId.toString() === userId);
 };
 
 // Mark a notification as read
 exports.markNotificationAsRead = async (notificationId) => {
   const notification = await Notification.findById(notificationId);
   if (!notification) throw new Error('Notification not found');
-
-  notification.read = true;
+  notification.isRead = true;
   await notification.save();
-
   return notification;
 };
 
-// Mark all notifications for a user as read
-exports.markAllNotificationsAsRead = async (userId) => {
-  const result = await Notification.updateMany({ userId, read: false }, { $set: { read: true } });
-  return result;
-};
+// Create a new notification
+exports.createNotification = async ({ tripId, type, title, message, userId }) => {
+  const trip = await Trip.findById(tripId);
+  if (!trip) throw new Error('Trip not found');
 
-// Delete a notification
-exports.deleteNotification = async (notificationId) => {
-  const notification = await Notification.findByIdAndDelete(notificationId);
-  if (!notification) throw new Error('Notification not found');
+  const notification = {
+    type,
+    title,
+    message,
+    userId,
+    isRead: false,
+    createdAt: new Date(),
+  };
+
+  trip.notifications.push(notification);
+  await trip.save();
   return notification;
-};
-
-// Delete all notifications for a trip
-exports.deleteNotificationsByTrip = async (tripId) => {
-  const result = await Notification.deleteMany({ tripId });
-  return result;
 };
