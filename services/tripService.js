@@ -1,53 +1,29 @@
 const Trip = require('../models/tripModel');
-const User = require('../models/userModel');
-const { v4: uuidv4 } = require('uuid'); 
 
 // Create a new trip
-exports.createTrip = async (req, res) => {
-  const { name, location, description, startDate, endDate, privacy, tripType, coverImage, collaborators } = req.body;
-  const organizer = req.user.userId; // Assume user ID is available from authentication middleware
+exports.createTrip = async (organizerId, tripData) => {
+  const { name, location, startDate, endDate, privacy } = tripData;
 
-  try {
-    const trip = new Trip({
-      name,
-      location,
-      description,
-      startDate,
-      endDate,
-      privacy,
-      tripType,
-      coverImage,
-      organizer,
-      collaborators
-    });
-    await trip.save();
-
-    res.status(201).json(trip);
-  } catch (error) {
-    res.status(500).json({ message: 'Server error', error: error.message });
+  if (!name) {
+    throw new Error('Trip name is required');
   }
-};
 
-// Retrieve full trip details by ID
-exports.getTrip = async (tripId) => {
-  const trip = await Trip.findById(tripId)
-    .populate('organizer')
-    .populate('guests')
-    .populate('collaborators')
-    .populate('tasks.assignedTo')
-    .populate('expenses.splitWith.user')
-    .populate('polls.options.votes');
+  const trip = new Trip({
+    name,
+    location: location || null,
+    startDate: startDate || null,
+    endDate: endDate || null,
+    privacy: privacy || 'private',
+    organizer: organizerId,
+  });
 
-  if (!trip) {
-    throw new Error('Trip not found');
-  }
+  await trip.save();
   return trip;
 };
 
-// Retrieve a trip summary (e.g., for dashboard)
-exports.getTripSummary = async (tripId) => {
-  const trip = await Trip.findById(tripId, 'name location startDate endDate organizer coverImage')
-    .populate('organizer');
+// Retrieve trip details by ID
+exports.getTrip = async (tripId) => {
+  const trip = await Trip.findById(tripId).populate('organizer guests.user', 'name email');
   if (!trip) {
     throw new Error('Trip not found');
   }
@@ -72,67 +48,40 @@ exports.deleteTrip = async (tripId) => {
 };
 
 // Add a guest to a trip
-exports.addGuest = async (tripId, guestId) => {
+exports.addGuest = async (tripId, userId, rsvpStatus = 'pending') => {
   const trip = await Trip.findById(tripId);
   if (!trip) {
     throw new Error('Trip not found');
   }
 
-  // Check if guest is already in the list
-  if (trip.guests.includes(guestId)) {
+  if (trip.guests.some((guest) => guest.user.toString() === userId)) {
     throw new Error('Guest already added');
   }
 
-  trip.guests.push(guestId);
+  trip.guests.push({ user: userId, rsvpStatus });
   await trip.save();
-
-  return trip;
+  return trip.guests;
 };
 
 // Remove a guest from a trip
-exports.removeGuest = async (tripId, guestId) => {
+exports.removeGuest = async (tripId, userId) => {
   const trip = await Trip.findById(tripId);
   if (!trip) {
     throw new Error('Trip not found');
   }
 
-  trip.guests = trip.guests.filter(id => id.toString() !== guestId.toString());
-  await trip.save();
+  const initialGuestCount = trip.guests.length;
+  trip.guests = trip.guests.filter((guest) => guest.user.toString() !== userId);
 
-  return trip;
-};
-
-// Add a collaborator to a trip
-exports.addCollaborator = async (tripId, collaboratorId) => {
-  const trip = await Trip.findById(tripId);
-  if (!trip) {
-    throw new Error('Trip not found');
+  if (trip.guests.length === initialGuestCount) {
+    throw new Error('Guest not found in the trip');
   }
 
-  // Check if collaborator is already in the list
-  if (trip.collaborators.includes(collaboratorId)) {
-    throw new Error('Collaborator already added');
-  }
-
-  trip.collaborators.push(collaboratorId);
   await trip.save();
-
-  return trip;
+  return trip.guests;
 };
 
-// Remove a collaborator from a trip
-exports.removeCollaborator = async (tripId, collaboratorId) => {
-  const trip = await Trip.findById(tripId);
-  if (!trip) {
-    throw new Error('Trip not found');
-  }
-
-  trip.collaborators = trip.collaborators.filter(id => id.toString() !== collaboratorId.toString());
-  await trip.save();
-
-  return trip;
-};
-
+// Calculate trip progress (basic version for MVP)
 exports.calculateTripProgress = async (tripId) => {
   const trip = await Trip.findById(tripId);
   if (!trip) throw new Error('Trip not found');
@@ -140,25 +89,8 @@ exports.calculateTripProgress = async (tripId) => {
   // Task progress
   const totalTasks = trip.tasks.length;
   const completedTasks = trip.tasks.filter((task) => task.status === 'completed').length;
-  const taskCompletionPercentage = totalTasks ? Math.round((completedTasks / totalTasks) * 100) : 0;
 
-  // Expense progress
-  const totalExpenses = trip.expenses.length;
-  const completedExpenses = trip.expenses.filter((expense) => expense.status === 'completed').length;
+  const progress = totalTasks ? Math.round((completedTasks / totalTasks) * 100) : 0;
 
-  // Itinerary progress
-  const totalItineraryItems = trip.itinerary.length;
-  const confirmedItineraryItems = trip.itinerary.filter((item) => item.confirmed).length;
-
-  // Milestones
-  const milestones = [
-    { label: 'Tasks Completed', value: `${completedTasks}/${totalTasks}` },
-    { label: 'Confirmed Itinerary Items', value: `${confirmedItineraryItems}/${totalItineraryItems}` },
-    { label: 'Completed Expenses', value: `${completedExpenses}/${totalExpenses}` },
-  ];
-
-  return {
-    taskCompletionPercentage,
-    milestones,
-  };
+  return { progress, totalTasks, completedTasks };
 };

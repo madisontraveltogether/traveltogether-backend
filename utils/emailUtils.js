@@ -1,22 +1,23 @@
 const nodemailer = require('nodemailer');
+const crypto = require('crypto');
 
-// Create a Nodemailer transporter
+// Configure the transporter
 const transporter = nodemailer.createTransport({
-  service: 'gmail', // or 'smtp.mailtrap.io', 'outlook', etc., depending on your email service
+  service: 'gmail',
   auth: {
-    user: process.env.EMAIL_FROM, // Your email
-    pass: process.env.EMAIL_PASSWORD, // Your email password or app-specific password
+    user: process.env.EMAIL_FROM,
+    pass: process.env.EMAIL_PASSWORD, // Or app-specific password
   },
 });
 
-// General function to send an email using Nodemailer
+// General function to send an email
 exports.sendEmail = async ({ toEmails, subject, textContent, htmlContent }) => {
   const recipients = Array.isArray(toEmails) ? toEmails.join(', ') : toEmails;
 
   const emailOptions = {
-    from: `"${process.env.EMAIL_NAME || 'Your App Name'}" <${process.env.EMAIL_FROM}>`,
+    from: `"TravelTogether" <${process.env.EMAIL_FROM}>`,
     to: recipients,
-    subject: subject,
+    subject,
     text: textContent,
     html: htmlContent || `<p>${textContent}</p>`,
   };
@@ -31,22 +32,14 @@ exports.sendEmail = async ({ toEmails, subject, textContent, htmlContent }) => {
   }
 };
 
-// Helper to send a notification email
-exports.sendNotificationEmail = async (toEmails, subject, message) => {
-  const htmlMessage = `<p>${message}</p>`;
-  return await this.sendEmail({ toEmails, subject, textContent: message, htmlContent: htmlMessage });
-};
-
-// Example: Send invitation email
-exports.sendInvitationEmail = async (toEmails, tripName, organizerName, invitationLink) => {
+// Helper to send an invitation email
+exports.sendInvitationEmail = async (toEmail, tripName, organizerName, invitationLink) => {
   const subject = `You're Invited to Join the Trip: ${tripName}`;
   const message = `
-    Hi there! <br><br>
-    ${organizerName} has invited you to join the trip "<strong>${tripName}</strong>".
-    <br><br>
-    <a href="${invitationLink}">Click here to join the trip</a>
-    <br><br>
-    Looking forward to having you on board!
+    <p>Hi there!</p>
+    <p>${organizerName} has invited you to join the trip <strong>${tripName}</strong>.</p>
+    <p><a href="${invitationLink}" target="_blank">Click here to join the trip</a></p>
+    <p>Looking forward to having you on board!</p>
   `;
-  return await this.sendEmail({ toEmails, subject, textContent: message, htmlContent: message });
+  return await this.sendEmail({ toEmails: toEmail, subject, htmlContent: message });
 };

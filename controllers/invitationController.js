@@ -1,89 +1,37 @@
-const Invitation = require('../models/invitationModel');
 const Trip = require('../models/tripModel');
 const User = require('../models/userModel');
+const { generateInvitationLink } = require('../utils/invitationUtils');
+const { sendInvitationEmail } = require('../utils/emailUtils');
 
-// Get all invitations for the logged-in user
-exports.getUserInvitations = async (req, res) => {
-  try {
-    const invitations = await Invitation.find({ user: req.user.userId })
-      .populate('trip', 'name destination organizer')
-      .populate('trip.organizer', 'name email');
-    res.status(200).json(invitations);
-  } catch (error) {
-    res.status(500).json({ message: 'Server error', error: error.message });
-  }
-};
-
-// Accept an invitation
-exports.acceptInvitation = async (req, res) => {
-  const { invitationId } = req.params;
+// Generate and send an invitation
+exports.inviteUserToTrip = async (req, res) => {
+  const { tripId } = req.params;
+  const { email } = req.body;
 
   try {
-    const invitation = await Invitation.findById(invitationId);
-    if (!invitation) return res.status(404).json({ message: 'Invitation not found' });
-
-    const { tripId, email } = invitation;
-
-    const trip = await Trip.findById(tripId);
+    const trip = await Trip.findById(tripId).populate('organizer', 'name');
     if (!trip) return res.status(404).json({ message: 'Trip not found' });
 
-    // Add the user to the trip's guest list
-    const user = await User.findOne({ email });
-    if (!user) return res.status(404).json({ message: 'User not found' });
+    if (!email) return res.status(400).json({ message: 'Email is required' });
 
-    trip.guests.push({ user: user.id, rsvpStatus: 'pending' });
-    user.invitedTrips.push(tripId);
-
-    await Promise.all([trip.save(), user.save()]);
-
-    // Mark invitation as accepted
-    invitation.status = 'accepted';
-    await invitation.save();
-
-    res.status(200).json({ message: 'Invitation accepted', trip });
-  } catch (error) {
-    console.error('Error accepting invitation:', error);
-    res.status(500).json({ message: 'Server error', error: error.message });
-  }
-};
-
-exports.declineInvitation = async (req, res) => {
-  const { invitationId } = req.params;
-
-  try {
-    const invitation = await Invitation.findById(invitationId);
-    if (!invitation) return res.status(404).json({ message: 'Invitation not found' });
-
-    // Mark invitation as declined
-    invitation.status = 'declined';
-    await invitation.save();
-
-    res.status(200).json({ message: 'Invitation declined' });
-  } catch (error) {
-    console.error('Error declining invitation:', error);
-    res.status(500).json({ message: 'Server error', error: error.message });
-  }
-};
-
-
-// Decline an invitation
-exports.declineInvitation = async (req, res) => {
-  const { invitationId } = req.params;
-
-  try {
-    const invitation = await Invitation.findById(invitationId);
-    if (!invitation) {
-      return res.status(404).json({ message: 'Invitation not found' });
+    // Check if the email is already invited
+    if (trip.pendingInvites.some((invite) => invite.email === email)) {
+      return res.status(400).json({ message: 'Email already invited' });
     }
 
-    if (invitation.status !== 'pending') {
-      return res.status(400).json({ message: 'Invitation already responded to' });
-    }
+    // Generate the invitation link
+    const invitationLink = generateInvitationLink(tripId, email);
 
-    invitation.status = 'declined';
-    await invitation.save();
-    res.status(200).json({ message: 'Invitation declined' });
+    // Add the email to pendingInvites
+    trip.pendingInvites.push({ email, status: 'pending' });
+    await trip.save();
+
+    // Send the invitation email
+    await sendInvitationEmail(email, trip.name, trip.organizer.name, invitationLink);
+
+    res.status(200).json({ message: 'Invitation sent successfully' });
   } catch (error) {
+    console.error('Error inviting user:', error.message);
     res.status(500).json({ message: 'Server error', error: error.message });
   }
 };

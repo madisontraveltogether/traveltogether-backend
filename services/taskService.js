@@ -1,111 +1,54 @@
 const Trip = require('../models/tripModel');
-const TripService = require('./tripService.js');
-const io = require('../server');
 
 // Create a new task for a specific trip
-exports.createTask = async (tripId, { title, description, assignedTo, dueDate, priority, isRecurring }) => {
+exports.createTask = async (tripId, taskData) => {
   const trip = await Trip.findById(tripId);
-  if (!trip) {
-    throw new Error('Trip not found');
-  }
+  if (!trip) throw new Error('Trip not found');
 
-  const task = { title, description, assignedTo, dueDate, priority, isRecurring };
+  const task = {
+    title: taskData.title,
+    description: taskData.description,
+    assignedTo: taskData.assignedTo,
+    dueDate: taskData.dueDate,
+    priority: taskData.priority,
+    isRecurring: taskData.isRecurring || false,
+    status: 'pending', // Default status
+  };
+
   trip.tasks.push(task);
   await trip.save();
-  await logActivity(tripId, userId, `Created task: "${task.title}"`);
 
-  const progress = await TripService.calculateTripProgress(tripId);
-  io.to(tripId).emit('tripProgressUpdated', progress);
+  return task;
+};
 
-   return task;
- };
-
-// Retrieve all tasks for a specific trip
+// Get all tasks for a specific trip
 exports.getTasks = async (tripId) => {
   const trip = await Trip.findById(tripId).populate('tasks.assignedTo');
-  if (!trip) {
-    throw new Error('Trip not found');
-  }
+  if (!trip) throw new Error('Trip not found');
+
   return trip.tasks;
 };
 
-// Retrieve a specific task by ID
+// Get details of a specific task
 exports.getTaskDetails = async (tripId, taskId) => {
   const trip = await Trip.findById(tripId).populate('tasks.assignedTo');
-  if (!trip) {
-    throw new Error('Trip not found');
-  }
+  if (!trip) throw new Error('Trip not found');
 
   const task = trip.tasks.id(taskId);
-  if (!task) {
-    throw new Error('Task not found');
-  }
+  if (!task) throw new Error('Task not found');
 
   return task;
 };
 
-// Update task details by ID
-exports.updateTask = async (tripId, taskId, updateData) => {
+// Update a task by ID
+exports.updateTask = async (tripId, taskId, updates) => {
   const trip = await Trip.findById(tripId);
-  if (!trip) {
-    throw new Error('Trip not found');
-  }
+  if (!trip) throw new Error('Trip not found');
 
   const task = trip.tasks.id(taskId);
-  if (!task) {
-    throw new Error('Task not found');
-  }
+  if (!task) throw new Error('Task not found');
 
-  // Update task fields if they are provided in updateData
-  if (updateData.title) task.title = updateData.title;
-  if (updateData.description) task.description = updateData.description;
-  if (updateData.dueDate) task.dueDate = updateData.dueDate;
-  if (updateData.priority) task.priority = updateData.priority;
-  if (typeof updateData.isRecurring !== 'undefined') task.isRecurring = updateData.isRecurring;
-
-  Object.assign(task, updateData);
-  await trip.save();
-
-  await logActivity(tripId, userId, `Updated task: "${task.title}"`);
-
-  return task;
-};
-
-// Update task status
-exports.updateTaskStatus = async (tripId, taskId, status) => {
-  const trip = await Trip.findById(tripId);
-  if (!trip) {
-    throw new Error('Trip not found');
-  }
-
-  const task = trip.tasks.id(taskId);
-  if (!task) {
-    throw new Error('Task not found');
-  }
-
-  task.status = status;
-  await trip.save();
-
-  const progress = await TripService.calculateTripProgress(tripId);
-  io.to(tripId).emit('tripProgressUpdated', progress);
-
-
-  return task;
-};
-
-// Assign users to a task
-exports.assignTask = async (tripId, taskId, assignedTo) => {
-  const trip = await Trip.findById(tripId);
-  if (!trip) {
-    throw new Error('Trip not found');
-  }
-
-  const task = trip.tasks.id(taskId);
-  if (!task) {
-    throw new Error('Task not found');
-  }
-
-  task.assignedTo = assignedTo;
+  Object.assign(task, updates); // Apply updates to the task
   await trip.save();
 
   return task;
@@ -114,20 +57,13 @@ exports.assignTask = async (tripId, taskId, assignedTo) => {
 // Delete a specific task by ID
 exports.deleteTask = async (tripId, taskId) => {
   const trip = await Trip.findById(tripId);
-  if (!trip) {
-    throw new Error('Trip not found');
-  }
+  if (!trip) throw new Error('Trip not found');
 
   const task = trip.tasks.id(taskId);
-  if (!task) {
-    throw new Error('Task not found');
-  }
+  if (!task) throw new Error('Task not found');
 
-    const taskTitle = task.title;
-  task.remove();
+  task.remove(); // Remove the task
   await trip.save();
-
-  await logActivity(tripId, userId, `Deleted task: "${taskTitle}"`);
 
   return task;
 };
