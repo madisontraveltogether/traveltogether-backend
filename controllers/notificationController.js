@@ -1,12 +1,10 @@
-const Trip = require('../models/tripModel');
 const NotificationService = require('../services/notificationService');
 
 /**
  * Get all notifications for a trip
  */
-exports.getTripNotifications = async (req, res) => {
+const getTripNotifications = async (req, res) => {
   const { tripId } = req.params;
-
   try {
     const notifications = await NotificationService.getNotificationsByTrip(tripId);
     res.status(200).json(notifications);
@@ -17,15 +15,14 @@ exports.getTripNotifications = async (req, res) => {
 };
 
 /**
- * Get task-specific notifications for a trip
+ * Get task-specific notifications
  */
-exports.getTaskNotifications = async (req, res) => {
+const getTaskNotifications = async (req, res) => {
   const { tripId } = req.params;
   const userId = req.user.id;
-
   try {
-    const taskNotifications = await NotificationService.getTaskNotifications(tripId, userId);
-    res.status(200).json(taskNotifications);
+    const notifications = await NotificationService.getTaskNotifications(tripId, userId);
+    res.status(200).json(notifications);
   } catch (error) {
     console.error('Error fetching task notifications:', error);
     res.status(500).json({ message: 'Failed to fetch task notifications', error });
@@ -33,14 +30,13 @@ exports.getTaskNotifications = async (req, res) => {
 };
 
 /**
- * Get itinerary-specific notifications for a trip
+ * Get itinerary-specific notifications
  */
-exports.getItineraryNotifications = async (req, res) => {
+const getItineraryNotifications = async (req, res) => {
   const { tripId } = req.params;
-
   try {
-    const itineraryNotifications = await NotificationService.getItineraryNotifications(tripId);
-    res.status(200).json(itineraryNotifications);
+    const notifications = await NotificationService.getItineraryNotifications(tripId);
+    res.status(200).json(notifications);
   } catch (error) {
     console.error('Error fetching itinerary notifications:', error);
     res.status(500).json({ message: 'Failed to fetch itinerary notifications', error });
@@ -50,14 +46,20 @@ exports.getItineraryNotifications = async (req, res) => {
 /**
  * Mark a notification as read
  */
-exports.markAsRead = async (req, res) => {
+const markAsRead = async (req, res) => {
   const { notificationId } = req.params;
-
   try {
-    const updatedNotification = await NotificationService.markNotificationAsRead(notificationId);
-    res.status(200).json(updatedNotification);
+    const notification = await NotificationService.markNotificationAsRead(notificationId);
+    res.status(200).json(notification);
   } catch (error) {
     console.error('Error marking notification as read:', error);
     res.status(500).json({ message: 'Failed to mark notification as read', error });
   }
+};
+
+module.exports = {
+  getTripNotifications,
+  getTaskNotifications,
+  getItineraryNotifications,
+  markAsRead,
 };
