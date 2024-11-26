@@ -45,8 +45,6 @@ const getItineraryNotifications = async (req, res) => {
 
 exports.getExpenseNotifications = async (req, res) => {
   const { tripId } = req.params;
-  const userId = req.user?.id; // Use authenticated user's ID
-
   try {
     const notifications = await NotificationService.getExpenseNotifications(tripId);
     res.status(200).json(notifications);
@@ -74,6 +72,8 @@ module.exports = {
   getTripNotifications,
   getTaskNotifications,
   getItineraryNotifications,
+  getExpenseNotifications,
+  createExpenseNotification,
   markAsRead,
 };
 
