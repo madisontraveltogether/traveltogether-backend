@@ -1,5 +1,5 @@
 const User = require('../models/userModel');
-const sendMail = require('../services/mailService');
+const { sendEmail, sendInvitationEmail } = require('../utils/emailUtils');
 const jwt = require('jsonwebtoken');
 const bcrypt = require('bcrypt');
 const { JWT_SECRET, JWT_REFRESH_SECRET } = process.env;
