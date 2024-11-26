@@ -151,5 +151,7 @@ router.get('/:tripId/notifications', authMiddleware, notificationController.getT
 router.get('/:tripId/tasks/notifications', authMiddleware, notificationController.getTaskNotifications); // OK
 router.get('/:tripId/itinerary/notifications', authMiddleware, notificationController.getItineraryNotifications); // OK
 router.patch('/notifications/:notificationId', authMiddleware, notificationController.markAsRead); // OK
+router.get('/:tripId/expenses/notifications', authMiddleware, notificationController.getExpenseNotifications); // Get notifications for expenses
+router.post('/:tripId/expenses/notifications', authMiddleware, notificationController.createExpenseNotification);
 
 module.exports = router;

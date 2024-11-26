@@ -60,3 +60,22 @@ exports.createNotification = async (tripId, type, payload, userId = null) => {
   await trip.save();
   return notification;
 };
+
+exports.createExpenseNotification = async (req, res) => {
+  const { tripId } = req.params;
+  const { title, message, userId } = req.body; // Expecting these in the request body
+
+  try {
+    const notification = await NotificationService.createNotification({
+      tripId,
+      type: 'expense',
+      title,
+      message,
+      userId,
+    });
+    res.status(201).json(notification);
+  } catch (error) {
+    console.error('Error creating expense notification:', error);
+    res.status(500).json({ message: 'Failed to create expense notification', error: error.message });
+  }
+};

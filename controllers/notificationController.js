@@ -63,3 +63,35 @@ module.exports = {
   getItineraryNotifications,
   markAsRead,
 };
+
+exports.getExpenseNotifications = async (req, res) => {
+  const { tripId } = req.params;
+  const userId = req.user.id;
+
+  try {
+    const notifications = await NotificationService.getNotificationsByType(tripId, 'expense', userId);
+    res.status(200).json(notifications);
+  } catch (error) {
+    console.error('Error fetching expense notifications:', error);
+    res.status(500).json({ message: 'Failed to fetch expense notifications', error: error.message });
+  }
+};
+
+exports.createExpenseNotification = async (req, res) => {
+  const { tripId } = req.params;
+  const { title, message, userId } = req.body; // Expecting these in the request body
+
+  try {
+    const notification = await NotificationService.createNotification({
+      tripId,
+      type: 'expense',
+      title,
+      message,
+      userId,
+    });
+    res.status(201).json(notification);
+  } catch (error) {
+    console.error('Error creating expense notification:', error);
+    res.status(500).json({ message: 'Failed to create expense notification', error: error.message });
+  }
+};
