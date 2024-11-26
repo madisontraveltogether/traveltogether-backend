@@ -68,19 +68,7 @@ const markAsRead = async (req, res) => {
   }
 };
 
-module.exports = {
-  getTripNotifications,
-  getTaskNotifications,
-  getItineraryNotifications,
-  getExpenseNotifications,
-  createExpenseNotification,
-  markAsRead,
-};
-
-// notificationController.js
-
-
-exports.createExpenseNotification = async (req, res) => {
+const createExpenseNotification = async (req, res) => {
   const { tripId } = req.params;
   const { title, message, userId } = req.body; // Expecting these in the request body
 
@@ -97,4 +85,13 @@ exports.createExpenseNotification = async (req, res) => {
     console.error('Error creating expense notification:', error);
     res.status(500).json({ message: 'Failed to create expense notification', error: error.message });
   }
+};
+
+module.exports = {
+  getTripNotifications,
+  getTaskNotifications,
+  getItineraryNotifications,
+  getExpenseNotifications,
+  createExpenseNotification,
+  markAsRead,
 };
