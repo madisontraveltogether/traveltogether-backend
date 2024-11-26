@@ -25,6 +25,11 @@ exports.getItineraryNotifications = async (tripId) => {
   return notifications.filter((n) => n.type === 'itinerary');
 };
 
+exports.getExpenseNotifications = async (tripId, userId) => {
+  const notifications = await this.getNotificationsByTrip(tripId);
+  return notifications.filter((n) => n.type === 'expenses');
+};
+
 /**
  * Mark a notification as read
  */
@@ -61,20 +66,3 @@ exports.createNotification = async (tripId, type, payload, userId = null) => {
   return notification;
 };
 
-exports.getExpenseNotifications = async (tripId, userId) => {
-  try {
-    const trip = await Trip.findById(tripId);
-    if (!trip) throw new Error('Trip not found');
-
-    const notifications = trip.notifications.filter(
-      (notification) =>
-        notification.type === 'expense' && 
-        (!notification.userId || notification.userId.toString() === userId) // Match userId or global notification
-    );
-
-    return notifications;
-  } catch (error) {
-    console.error('Error fetching expense notifications:', error);
-    throw new Error('Failed to fetch expense notifications');
-  }
-};
