@@ -43,7 +43,8 @@ exports.getTaskNotifications = async (req, res) => {
       console.error('Error marking notification as read:', error);
       res.status(500).json({ message: 'Failed to update notification status', error: error.message });
     }
-  };
+  };  
+  
 
 /**
  * Get itinerary-specific notifications
