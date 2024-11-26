@@ -68,16 +68,27 @@ module.exports = {
 
 exports.getExpenseNotifications = async (req, res) => {
   const { tripId } = req.params;
-  const userId = req.user.id;
+  const userId = req.user?.id; // Optional chaining to avoid undefined errors
 
   try {
+    if (!userId) {
+      return res.status(400).json({ message: 'User ID is required' });
+    }
+
     const notifications = await NotificationService.getNotificationsByType(tripId, 'expense', userId);
+
+    if (!notifications || notifications.length === 0) {
+      console.warn('No notifications found for user:', userId);
+      return res.status(200).json([]);
+    }
+
     res.status(200).json(notifications);
   } catch (error) {
     console.error('Error fetching expense notifications:', error);
     res.status(500).json({ message: 'Failed to fetch expense notifications', error: error.message });
   }
 };
+
 
 exports.createExpenseNotification = async (req, res) => {
   const { tripId } = req.params;

@@ -83,14 +83,23 @@ exports.createExpenseNotification = async (req, res) => {
 exports.getNotificationsByType = async (tripId, type, userId) => {
   try {
     const trip = await Trip.findById(tripId);
-    if (!trip) throw new Error('Trip not found');
+    if (!trip) {
+      console.error('Trip not found:', tripId);
+      throw new Error('Trip not found');
+    }
+
+    if (!trip.notifications || !Array.isArray(trip.notifications)) {
+      console.error('No notifications found in trip:', tripId);
+      return [];
+    }
 
     // Filter notifications by type and user
-    const filteredNotifications = trip.notifications.filter(
-      (notification) =>
-        notification.type === type && 
+    const filteredNotifications = trip.notifications.filter((notification) => {
+      return (
+        notification.type === type &&
         (!notification.userId || notification.userId.toString() === userId) // Match userId or global notification
-    );
+      );
+    });
 
     return filteredNotifications;
   } catch (error) {
