@@ -1,4 +1,6 @@
 const Trip = require('../models/tripModel');
+const TripService = require('./tripService.js');
+const io = require('../socket');
 
 // Create a new task for a specific trip
 exports.createTask = async (tripId, { title, description, assignedTo, dueDate, priority, isRecurring }) => {
@@ -10,6 +12,9 @@ exports.createTask = async (tripId, { title, description, assignedTo, dueDate, p
   const task = { title, description, assignedTo, dueDate, priority, isRecurring };
   trip.tasks.push(task);
   await trip.save();
+
+  const progress = await TripService.calculateTripProgress(tripId);
+  io.to(tripId).emit('tripProgressUpdated', progress);
 
    return task;
  };
@@ -76,6 +81,10 @@ exports.updateTaskStatus = async (tripId, taskId, status) => {
 
   task.status = status;
   await trip.save();
+
+  const progress = await TripService.calculateTripProgress(tripId);
+  io.to(tripId).emit('tripProgressUpdated', progress);
+
 
   return task;
 };

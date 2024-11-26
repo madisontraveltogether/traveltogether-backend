@@ -132,3 +132,33 @@ exports.removeCollaborator = async (tripId, collaboratorId) => {
 
   return trip;
 };
+
+exports.calculateTripProgress = async (tripId) => {
+  const trip = await Trip.findById(tripId);
+  if (!trip) throw new Error('Trip not found');
+
+  // Task progress
+  const totalTasks = trip.tasks.length;
+  const completedTasks = trip.tasks.filter((task) => task.status === 'completed').length;
+  const taskCompletionPercentage = totalTasks ? Math.round((completedTasks / totalTasks) * 100) : 0;
+
+  // Expense progress
+  const totalExpenses = trip.expenses.length;
+  const completedExpenses = trip.expenses.filter((expense) => expense.status === 'completed').length;
+
+  // Itinerary progress
+  const totalItineraryItems = trip.itinerary.length;
+  const confirmedItineraryItems = trip.itinerary.filter((item) => item.confirmed).length;
+
+  // Milestones
+  const milestones = [
+    { label: 'Tasks Completed', value: `${completedTasks}/${totalTasks}` },
+    { label: 'Confirmed Itinerary Items', value: `${confirmedItineraryItems}/${totalItineraryItems}` },
+    { label: 'Completed Expenses', value: `${completedExpenses}/${totalExpenses}` },
+  ];
+
+  return {
+    taskCompletionPercentage,
+    milestones,
+  };
+};

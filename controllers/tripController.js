@@ -680,9 +680,19 @@ exports.joinTripByCode = async (req, res) => {
   }
 };
 
+exports.getTripProgress = async (req, res) => {
+  const { tripId } = req.params;
 
+  try {
+    const progress = await tripService.calculateTripProgress(tripId);
+    res.status(200).json(progress);
+  } catch (error) {
+    console.error('Error fetching trip progress:', error);
+    res.status(500).json({ message: 'Failed to fetch trip progress', error: error.message });
+  }
+};
 
-const generateTripDates = (startDate, endDate) => {
+exports.generateTripDates = (startDate, endDate) => {
   const dates = [];
   const currentDate = new Date(startDate);
   const end = new Date(endDate);
