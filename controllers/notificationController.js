@@ -72,7 +72,7 @@ exports.getExpenseNotifications = async (req, res) => {
 
   try {
     // Fetch notifications for the specific type
-    const notifications = await NotificationService.getNotificationsByType(tripId, 'expense', userId);
+    const notifications = await NotificationService.getExpenseNotifications(tripId, 'expense', userId);
     res.status(200).json(notifications);
   } catch (error) {
     console.error('Error fetching expense notifications:', error);
