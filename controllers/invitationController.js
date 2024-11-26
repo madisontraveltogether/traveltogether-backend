@@ -3,6 +3,7 @@ const User = require('../models/userModel');
 const { generateInvitationLink } = require('../utils/invitationUtils');
 const { sendInvitationEmail } = require('../utils/emailUtils');
 
+
 // Generate and send an invitation
 exports.inviteUserToTrip = async (req, res) => {
   const { tripId } = req.params;
