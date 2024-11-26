@@ -79,3 +79,22 @@ exports.createExpenseNotification = async (req, res) => {
     res.status(500).json({ message: 'Failed to create expense notification', error: error.message });
   }
 };
+
+exports.getNotificationsByType = async (tripId, type, userId) => {
+  try {
+    const trip = await Trip.findById(tripId);
+    if (!trip) throw new Error('Trip not found');
+
+    // Filter notifications by type and user
+    const filteredNotifications = trip.notifications.filter(
+      (notification) =>
+        notification.type === type && 
+        (!notification.userId || notification.userId.toString() === userId) // Match userId or global notification
+    );
+
+    return filteredNotifications;
+  } catch (error) {
+    console.error('Error fetching notifications by type:', error);
+    throw new Error('Failed to fetch notifications by type');
+  }
+};
