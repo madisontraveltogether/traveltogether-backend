@@ -149,7 +149,7 @@ exports.batchDeleteItineraryItems = async (req, res) => {
   }
 };
 
-exports.filterItineraryItems = async (req, res) => {
+exports.filterItinerary = async (req, res) => {
   const { tripId } = req.params;
   const { tags, day, startTimeRange } = req.query; // Filter criteria
 
