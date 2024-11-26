@@ -1,6 +1,6 @@
 const Trip = require('../models/tripModel');
 const TripService = require('./tripService.js');
-const io = require('../socket');
+const io = require('../server');
 
 // Create a new task for a specific trip
 exports.createTask = async (tripId, { title, description, assignedTo, dueDate, priority, isRecurring }) => {
