@@ -1,5 +1,6 @@
 const Notification = require("../models/tripModel"); // Assuming a Notification model
 const Trip = require("../models/tripModel");
+const NotificationService = require('../services/notificationService');
 
 /**
  * Get all notifications for a trip
@@ -20,16 +21,29 @@ exports.getTripNotifications = async (req, res) => {
  * Get task-specific notifications
  */
 exports.getTaskNotifications = async (req, res) => {
-  const { tripId } = req.params;
-
-  try {
-    const notifications = await Notification.find({ tripId, type: "task" });
-    res.status(200).json(notifications);
-  } catch (error) {
-    console.error("Error fetching task notifications:", error);
-    res.status(500).json({ message: "Failed to fetch task notifications", error });
-  }
-};
+    const { tripId } = req.params;
+    const userId = req.user.id;
+  
+    try {
+      const notifications = await NotificationService.getNotificationsByTrip(tripId, userId);
+      res.status(200).json(notifications);
+    } catch (error) {
+      console.error('Error fetching task notifications:', error);
+      res.status(500).json({ message: 'Failed to fetch task notifications', error: error.message });
+    }
+  };
+  
+  exports.markAsRead = async (req, res) => {
+    const { notificationId } = req.params;
+  
+    try {
+      const updatedNotification = await NotificationService.markNotificationAsRead(notificationId);
+      res.status(200).json(updatedNotification);
+    } catch (error) {
+      console.error('Error marking notification as read:', error);
+      res.status(500).json({ message: 'Failed to update notification status', error: error.message });
+    }
+  };
 
 /**
  * Get itinerary-specific notifications

@@ -1,70 +1,59 @@
-const nodemailer = require('nodemailer');
-const { EMAIL_USER, EMAIL_PASS, EMAIL_SERVICE } = process.env;
+const Notification = require('../models/notificationModel');
+const Trip = require('../models/tripModel');
 
-// Configure transporter with environment variables
-const transporter = nodemailer.createTransport({
-  service: EMAIL_SERVICE || 'gmail',
-  auth: {
-    user: EMAIL_USER,
-    pass: EMAIL_PASS
-  }
-});
+// Create a new notification
+exports.createNotification = async (tripId, type, payload, userIds = []) => {
+  const notifications = userIds.map((userId) => ({
+    tripId,
+    type,
+    payload,
+    userId,
+    read: false,
+    createdAt: new Date(),
+  }));
 
-// General function to send email notifications
-exports.sendNotification = async (email, subject, message) => {
-  const mailOptions = {
-    from: EMAIL_USER,
-    to: email,
-    subject: subject,
-    text: message
-  };
-
-  try {
-    await transporter.sendMail(mailOptions);
-    console.log(`Notification sent to ${email}`);
-  } catch (error) {
-    console.error('Error sending notification:', error);
-    throw new Error('Failed to send notification');
-  }
+  const createdNotifications = await Notification.insertMany(notifications);
+  return createdNotifications;
 };
 
-// Notify users of a new expense
-exports.notifyNewExpense = async (trip, expense) => {
-  const subject = `New Expense Added to Trip: ${trip.name}`;
-  const message = `${expense.payer.name} added a new expense "${expense.title}" for ${expense.amount} on your trip "${trip.name}".`;
-
-  // Notify all guests in the trip
-  for (const guest of trip.guests) {
-    await this.sendNotification(guest.email, subject, message);
-  }
+// Fetch notifications by trip
+exports.getNotificationsByTrip = async (tripId) => {
+  const notifications = await Notification.find({ tripId }).sort({ createdAt: -1 });
+  return notifications;
 };
 
-// Notify user of task assignment
-exports.notifyTaskAssignment = async (trip, task, assignedUser) => {
-  const subject = `New Task Assigned in Trip: ${trip.name}`;
-  const message = `You have been assigned a new task titled "${task.title}" with a due date of ${task.dueDate}. Check the details on your trip dashboard for "${trip.name}".`;
-
-  await this.sendNotification(assignedUser.email, subject, message);
+// Fetch notifications for a specific user
+exports.getNotificationsByUser = async (userId) => {
+  const notifications = await Notification.find({ userId }).sort({ createdAt: -1 });
+  return notifications;
 };
 
-// Notify users of new poll
-exports.notifyNewPoll = async (trip, poll) => {
-  const subject = `New Poll Created in Trip: ${trip.name}`;
-  const message = `A new poll "${poll.question}" has been created for your trip "${trip.name}". Participate by voting on your trip dashboard.`;
+// Mark a notification as read
+exports.markNotificationAsRead = async (notificationId) => {
+  const notification = await Notification.findById(notificationId);
+  if (!notification) throw new Error('Notification not found');
 
-  // Notify all guests in the trip
-  for (const guest of trip.guests) {
-    await this.sendNotification(guest.email, subject, message);
-  }
+  notification.read = true;
+  await notification.save();
+
+  return notification;
 };
 
-// Send reminder notifications for upcoming events
-exports.sendEventReminder = async (trip, event) => {
-  const subject = `Upcoming Event in Trip: ${trip.name}`;
-  const message = `Reminder: The event "${event.title}" is happening soon on ${event.startTime}. Check the itinerary on your trip dashboard.`;
+// Mark all notifications for a user as read
+exports.markAllNotificationsAsRead = async (userId) => {
+  const result = await Notification.updateMany({ userId, read: false }, { $set: { read: true } });
+  return result;
+};
 
-  // Notify all guests in the trip
-  for (const guest of trip.guests) {
-    await this.sendNotification(guest.email, subject, message);
-  }
+// Delete a notification
+exports.deleteNotification = async (notificationId) => {
+  const notification = await Notification.findByIdAndDelete(notificationId);
+  if (!notification) throw new Error('Notification not found');
+  return notification;
+};
+
+// Delete all notifications for a trip
+exports.deleteNotificationsByTrip = async (tripId) => {
+  const result = await Notification.deleteMany({ tripId });
+  return result;
 };

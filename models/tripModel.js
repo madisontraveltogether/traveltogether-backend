@@ -91,13 +91,12 @@ const PollSchema = new mongoose.Schema({
   maxVotesPerUser: { type: Number, default: 1 },
 });
 
-const notificationSchema = new mongoose.Schema({
-  tripId: { type: mongoose.Schema.Types.ObjectId, ref: "Trip", required: true },
-  type: { type: String, enum: ["task", "itinerary", "expense", "general"], required: true },
-  title: { type: String, required: true },
-  message: { type: String, required: true },
-  userId: { type: mongoose.Schema.Types.ObjectId, ref: "User", required: false }, // Optional
-  isRead: { type: Boolean, default: false },
+const NotificationSchema = new mongoose.Schema({
+  tripId: { type: mongoose.Schema.Types.ObjectId, ref: 'Trip', required: true },
+  userId: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
+  type: { type: String, enum: ['task', 'expense', 'itinerary', 'announcement'], required: true },
+  payload: { type: mongoose.Schema.Types.Mixed, required: true }, // Customizable data
+  read: { type: Boolean, default: false },
   createdAt: { type: Date, default: Date.now },
 });
 
@@ -140,12 +139,7 @@ const TripSchema = new Schema({
     maxGuests: { type: Number, default: 50 },
   },
   tripDates: [String],
-  notifications: [
-    {
-      message: String,
-      date: { type: Date, default: Date.now },
-    },
-  ],
+  notifications: [notificationSchema],
   activityLogs: [
     {
       activity: String,
@@ -161,7 +155,6 @@ const TripSchema = new Schema({
     },
   ],
   inviteCode: { type: String, unique: true }, 
-  notifications: [notificationSchema]
 });
 
 module.exports = mongoose.model('Trip', TripSchema);
