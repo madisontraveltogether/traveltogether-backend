@@ -139,7 +139,7 @@ const TripSchema = new Schema({
     maxGuests: { type: Number, default: 50 },
   },
   tripDates: [String],
-  notifications: [notificationSchema],
+  notifications: [NotificationSchema],
   activityLogs: [
     {
       activity: String,
