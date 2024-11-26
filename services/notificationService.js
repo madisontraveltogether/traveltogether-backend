@@ -63,6 +63,11 @@ exports.createNotification = async (tripId, type, payload, userId = null) => {
 
   trip.notifications.push(notification);
   await trip.save();
+
+  // Emit the new notification to clients
+  const io = req.app.get('socketio'); // Access Socket.IO instance
+  io.to(tripId).emit('newNotification', notification);
+
   return notification;
 };
 

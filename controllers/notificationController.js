@@ -1,4 +1,5 @@
 const NotificationService = require('../services/notificationService');
+const io = require('../server'); // Import WebSocket instance
 
 /**
  * Get all notifications for a trip
@@ -87,6 +88,25 @@ const createExpenseNotification = async (req, res) => {
   }
 };
 
+
+const createNotification = async (req, res) => {
+  const { tripId } = req.params;
+  const { type, payload, userId } = req.body;
+
+  try {
+    const notification = await NotificationService.createNotification(tripId, type, payload, userId);
+
+    // Emit the notification to WebSocket clients
+    io.to(tripId).emit('newNotification', notification);
+
+    res.status(201).json(notification);
+  } catch (error) {
+    console.error('Error creating notification:', error);
+    res.status(500).json({ message: 'Failed to create notification', error: error.message });
+  }
+};
+
+
 module.exports = {
   getTripNotifications,
   getTaskNotifications,
@@ -94,4 +114,5 @@ module.exports = {
   getExpenseNotifications,
   createExpenseNotification,
   markAsRead,
+  createNotification,
 };
