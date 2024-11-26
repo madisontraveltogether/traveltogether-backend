@@ -43,7 +43,7 @@ const getItineraryNotifications = async (req, res) => {
   }
 };
 
-exports.getExpenseNotifications = async (req, res) => {
+const getExpenseNotifications = async (req, res) => {
   const { tripId } = req.params;
   try {
     const notifications = await NotificationService.getExpenseNotifications(tripId);
