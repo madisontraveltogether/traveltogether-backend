@@ -28,6 +28,7 @@ router.patch('/:tripId', authMiddleware, tripController.updateTrip);
 router.delete('/:tripId', authMiddleware, tripController.deleteTrip);
 router.post('/', authMiddleware, tripController.createTrip);
 router.get('/:tripId/progress', authMiddleware, tripController.getTripProgress);
+router.get('/:tripId/activity-logs', authMiddleware, tripController.getActivityLogs);
 
 // Invite system routes
 router.post('/:tripId/generate-code', authMiddleware, tripController.generateTripCode); // Generate a unique invite code for a trip

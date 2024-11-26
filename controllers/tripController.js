@@ -718,3 +718,17 @@ exports.getInviteLink = async (req, res) => {
     res.status(500).json({ message: "Server error", error: error.message });
   }
 };
+
+exports.getActivityLogs = async (req, res) => {
+  const { tripId } = req.params;
+
+  try {
+    const trip = await Trip.findById(tripId).populate('activityLogs.user', 'name'); // Populate user names
+    if (!trip) return res.status(404).json({ message: 'Trip not found' });
+
+    res.status(200).json(trip.activityLogs);
+  } catch (error) {
+    console.error('Error fetching activity logs:', error);
+    res.status(500).json({ message: 'Failed to fetch activity logs', error: error.message });
+  }
+};

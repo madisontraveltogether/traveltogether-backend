@@ -12,6 +12,7 @@ exports.createTask = async (tripId, { title, description, assignedTo, dueDate, p
   const task = { title, description, assignedTo, dueDate, priority, isRecurring };
   trip.tasks.push(task);
   await trip.save();
+  await logActivity(tripId, userId, `Created task: "${task.title}"`);
 
   const progress = await TripService.calculateTripProgress(tripId);
   io.to(tripId).emit('tripProgressUpdated', progress);
@@ -62,7 +63,10 @@ exports.updateTask = async (tripId, taskId, updateData) => {
   if (updateData.priority) task.priority = updateData.priority;
   if (typeof updateData.isRecurring !== 'undefined') task.isRecurring = updateData.isRecurring;
 
+  Object.assign(task, updateData);
   await trip.save();
+
+  await logActivity(tripId, userId, `Updated task: "${task.title}"`);
 
   return task;
 };
@@ -119,8 +123,11 @@ exports.deleteTask = async (tripId, taskId) => {
     throw new Error('Task not found');
   }
 
+    const taskTitle = task.title;
   task.remove();
   await trip.save();
+
+  await logActivity(tripId, userId, `Deleted task: "${taskTitle}"`);
 
   return task;
 };

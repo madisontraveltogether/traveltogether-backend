@@ -155,6 +155,13 @@ const TripSchema = new Schema({
     },
   ],
   inviteCode: { type: String, unique: true }, 
+  activityLogs: [
+    {
+      user: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true }, // Who performed the action
+      action: { type: String, required: true }, // Action description (e.g., "created task", "deleted task")
+      timestamp: { type: Date, default: Date.now }, // When the action was performed
+    },
+  ],
 });
 
 module.exports = mongoose.model('Trip', TripSchema);
