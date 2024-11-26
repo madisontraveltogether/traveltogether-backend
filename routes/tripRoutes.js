@@ -149,9 +149,9 @@ router.post('/user/invitations/:invitationId/decline', authMiddleware, invitatio
 
 
 //notification Routes
-router.get('/:tripId/notifications', authMiddleware, notificationController.getTripNotifications); // Get all notifications for a trip
-router.get('/:tripId/tasks/notifications', authMiddleware, notificationController.getTaskNotifications); // Get task-specific notifications
-router.get('/:tripId/itinerary/notifications', authMiddleware, notificationController.getItineraryNotifications); // Get itinerary-specific notifications
-router.patch('/notifications/:notificationId', authMiddleware, notificationController.markAsRead); 
+router.get('/:tripId/notifications', authMiddleware, notificationController.getTripNotifications); // OK
+router.get('/:tripId/tasks/notifications', authMiddleware, notificationController.getTaskNotifications); // OK
+router.get('/:tripId/itinerary/notifications', authMiddleware, notificationController.getItineraryNotifications); // OK
+router.patch('/notifications/:notificationId', authMiddleware, notificationController.markAsRead); // OK
 
 module.exports = router;
