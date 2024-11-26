@@ -64,6 +64,8 @@ module.exports = {
   markAsRead,
 };
 
+// notificationController.js
+
 exports.getExpenseNotifications = async (req, res) => {
   const { tripId } = req.params;
   const userId = req.user.id;
