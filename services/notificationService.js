@@ -61,49 +61,20 @@ exports.createNotification = async (tripId, type, payload, userId = null) => {
   return notification;
 };
 
-exports.createExpenseNotification = async (req, res) => {
-  const { tripId } = req.params;
-  const { title, message, userId } = req.body; // Expecting these in the request body
-
-  try {
-    const notification = await NotificationService.createNotification({
-      tripId,
-      type: 'expense',
-      title,
-      message,
-      userId,
-    });
-    res.status(201).json(notification);
-  } catch (error) {
-    console.error('Error creating expense notification:', error);
-    res.status(500).json({ message: 'Failed to create expense notification', error: error.message });
-  }
-};
-
-exports.getNotificationsByType = async (tripId, type, userId) => {
+exports.getExpenseNotifications = async (tripId, userId) => {
   try {
     const trip = await Trip.findById(tripId);
-    if (!trip) {
-      console.error('Trip not found:', tripId);
-      throw new Error('Trip not found');
-    }
+    if (!trip) throw new Error('Trip not found');
 
-    if (!trip.notifications || !Array.isArray(trip.notifications)) {
-      console.error('No notifications found in trip:', tripId);
-      return [];
-    }
-
-    // Filter notifications by type and user
-    const filteredNotifications = trip.notifications.filter((notification) => {
-      return (
-        notification.type === type &&
+    const notifications = trip.notifications.filter(
+      (notification) =>
+        notification.type === 'expense' && 
         (!notification.userId || notification.userId.toString() === userId) // Match userId or global notification
-      );
-    });
+    );
 
-    return filteredNotifications;
+    return notifications;
   } catch (error) {
-    console.error('Error fetching notifications by type:', error);
-    throw new Error('Failed to fetch notifications by type');
+    console.error('Error fetching expense notifications:', error);
+    throw new Error('Failed to fetch expense notifications');
   }
 };
