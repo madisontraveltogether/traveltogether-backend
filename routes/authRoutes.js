@@ -15,5 +15,7 @@ router.patch('/profile/password', authMiddleware, authController.resetPassword);
 router.post('/profile/picture', authMiddleware, userController.uploadProfilePicture);
 router.patch('/profile', authMiddleware, userController.updateUserProfile);
 router.patch('/profile/preferences', authMiddleware, userController.updatePreferences);
+router.get('/auth/profile/notification-preferences', authMiddleware, userController.getNotificationPreferences);
+router.patch('/auth/profile/notification-preferences', authMiddleware, userController.updateNotificationPreferences);
 
 module.exports = router;
