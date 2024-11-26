@@ -1,5 +1,4 @@
 const Trip = require('../models/tripModel');
-const notificationService = require('./notificationService'); // Importing notification service
 
 // Create a new task for a specific trip
 exports.createTask = async (tripId, { title, description, assignedTo, dueDate, priority, isRecurring }) => {
@@ -11,13 +10,6 @@ exports.createTask = async (tripId, { title, description, assignedTo, dueDate, p
   const task = { title, description, assignedTo, dueDate, priority, isRecurring };
   trip.tasks.push(task);
   await trip.save();
-
-//   // Send notification to assigned users if any
-//   if (assignedTo && assignedTo.length > 0) {
-//     for (const user of assignedTo) {
-//       await notificationService.notifyTaskAssignment(trip, task, user);
-//     }
-//   }
 
    return task;
  };
@@ -102,11 +94,6 @@ exports.assignTask = async (tripId, taskId, assignedTo) => {
 
   task.assignedTo = assignedTo;
   await trip.save();
-
-  // Send notifications to newly assigned users
-  for (const user of assignedTo) {
-    await notificationService.notifyTaskAssignment(trip, task, user);
-  }
 
   return task;
 };

@@ -93,8 +93,6 @@ router.get('/:tripId/tasks/:taskId/comments', authMiddleware, taskController.get
 router.get('/:tripId/tasks/progress', authMiddleware, taskController.getTripProgress);
 router.post('/:tripId/tasks/filter', authMiddleware, taskController.filterTasks); // Dynamic querying and filters
 router.post('/:tripId/tasks/batch-delete', authMiddleware, taskController.batchDeleteTasks);
-router.get('/:tripId/tasks/notifications', authMiddleware, notificationController.getTaskNotifications);
-router.patch('/tasks/notifications/:notificationId', authMiddleware, notificationController.markAsRead);
 
 /**
  * Poll Routes
@@ -132,8 +130,6 @@ router.delete('/:tripId/itinerary/:itemId', authMiddleware, itineraryController.
 router.get('/:tripId/itinerary/tags', authMiddleware, itineraryController.getItineraryByTags);
 router.get('/:tripId/itinerary/export', authMiddleware, itineraryController.exportToCalendar);
 router.post('/:tripId/itinerary/filter', authMiddleware, itineraryController.filterItinerary); // Dynamic filters
-router.get('/:tripId/itinerary/notifications', authMiddleware, notificationController.getItineraryNotifications);
-router.patch('/itinerary/notifications/:notificationId', authMiddleware, notificationController.markAsRead);
 router.post('/:tripId/itinerary/batch-delete', authMiddleware, itineraryController.batchDeleteItineraryItems);
 router.post('/:tripId/itinerary/integrations/google-calendar', authMiddleware, itineraryController.syncToGoogleCalendar);
 
@@ -150,5 +146,12 @@ router.patch('/:tripId/settings', authMiddleware, tripSettingsController.updateS
 router.get('/user/invitations', authMiddleware, invitationController.getUserInvitations);
 router.post('/user/invitations/:invitationId/accept', authMiddleware, invitationController.acceptInvitation);
 router.post('/user/invitations/:invitationId/decline', authMiddleware, invitationController.declineInvitation);
+
+
+//notification Routes
+router.get('/:tripId/notifications', authMiddleware, notificationController.getTripNotifications); // Get all notifications for a trip
+router.get('/:tripId/tasks/notifications', authMiddleware, notificationController.getTaskNotifications); // Get task-specific notifications
+router.get('/:tripId/itinerary/notifications', authMiddleware, notificationController.getItineraryNotifications); // Get itinerary-specific notifications
+router.patch('/notifications/:notificationId', authMiddleware, notificationController.markAsRead); 
 
 module.exports = router;

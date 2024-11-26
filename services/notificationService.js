@@ -1,38 +1,58 @@
 const Trip = require('../models/tripModel');
 
-// Get notifications for a trip
+/**
+ * Get all notifications for a trip
+ */
 exports.getNotificationsByTrip = async (tripId) => {
   const trip = await Trip.findById(tripId);
   if (!trip) throw new Error('Trip not found');
   return trip.notifications || [];
 };
 
-// Get task-specific notifications
+/**
+ * Get task-specific notifications for a trip
+ */
 exports.getTaskNotifications = async (tripId, userId) => {
   const notifications = await this.getNotificationsByTrip(tripId);
-  return notifications.filter((n) => n.type === 'task' && n.userId.toString() === userId);
+  return notifications.filter((n) => n.type === 'task' && (!n.userId || n.userId.toString() === userId));
 };
 
-// Mark a notification as read
+/**
+ * Get itinerary-specific notifications for a trip
+ */
+exports.getItineraryNotifications = async (tripId) => {
+  const notifications = await this.getNotificationsByTrip(tripId);
+  return notifications.filter((n) => n.type === 'itinerary');
+};
+
+/**
+ * Mark a notification as read
+ */
 exports.markNotificationAsRead = async (notificationId) => {
-  const notification = await Notification.findById(notificationId);
+  const trip = await Trip.findOne({ 'notifications._id': notificationId });
+  if (!trip) throw new Error('Notification not found');
+
+  const notification = trip.notifications.id(notificationId);
   if (!notification) throw new Error('Notification not found');
-  notification.isRead = true;
-  await notification.save();
+
+  notification.read = true;
+  await trip.save();
+
   return notification;
 };
 
-// Create a new notification
-exports.createNotification = async ({ tripId, type, title, message, userId }) => {
+/**
+ * Create a notification
+ */
+exports.createNotification = async (tripId, type, payload, userId = null) => {
   const trip = await Trip.findById(tripId);
   if (!trip) throw new Error('Trip not found');
 
   const notification = {
     type,
-    title,
-    message,
+    payload,
     userId,
-    isRead: false,
+    read: false,
     createdAt: new Date(),
   };
 
