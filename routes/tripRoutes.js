@@ -131,8 +131,6 @@ router.get('/:tripId/itinerary/tags', authMiddleware, itineraryController.getIti
 router.get('/:tripId/itinerary/export', authMiddleware, itineraryController.exportToCalendar);
 router.post('/:tripId/itinerary/filter', authMiddleware, itineraryController.filterItinerary); // Dynamic filters
 router.post('/:tripId/itinerary/batch-delete', authMiddleware, itineraryController.batchDeleteItineraryItems);
-router.post('/:tripId/itinerary/integrations/google-calendar', authMiddleware, itineraryController.syncToGoogleCalendar);
-
 
 /**
  * Settings Routes
