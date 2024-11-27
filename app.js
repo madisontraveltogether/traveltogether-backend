@@ -32,9 +32,7 @@ app.use(morgan('dev')); // Logger for development
 // Routes
 app.use('/api/auth', authRoutes);
 app.use('/api/trips', tripRoutes);
-app.use('/api/trips/:tripId/expenses', expenseRoutes);
-app.use('/api/trips/:tripId/tasks', taskRoutes);
-app.use('/api/trips/:tripId/polls', pollRoutes);
+
 
 // Global error handler
 app.use(errorHandler);
