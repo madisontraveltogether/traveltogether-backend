@@ -136,3 +136,22 @@ exports.joinTripByCode = async (req, res) => {
     res.status(500).json({ message: "Failed to join trip", error: error.message });
   }
 };
+
+exports.getAllUserTrips = async (req, res) => {
+  const userId = req.user.userId; // Assuming authMiddleware attaches `user` to `req`
+
+  try {
+    const trips = await Trip.find({
+      $or: [
+        { organizer: userId },            // Trips organized by the user
+        { 'guests.user': userId },        // Trips the user is a guest in
+        { collaborators: userId },        // Trips the user is a collaborator in
+      ],
+    }).select('name location startDate endDate coverImage');
+
+    res.status(200).json(trips);
+  } catch (error) {
+    console.error('Error fetching trips:', error.message);
+    res.status(500).json({ message: 'Server error', error: error.message });
+  }
+};
