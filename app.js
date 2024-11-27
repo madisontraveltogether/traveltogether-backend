@@ -6,10 +6,6 @@ const connectDB = require('./config/db');
 const errorHandler = require('./middlewares/errorHandler');
 const authRoutes = require('./routes/authRoutes');
 const tripRoutes = require('./routes/tripRoutes');
-const expenseRoutes = require('./routes/expenseRoutes');
-const taskRoutes = require('./routes/taskRoutes');
-const pollRoutes = require('./routes/pollRoutes');
-
 const app = express();
 
 // Connect to the database
