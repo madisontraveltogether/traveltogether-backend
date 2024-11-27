@@ -9,8 +9,7 @@ const emailRoutes = require('./routes/emailRoutes'); // Ensure this is implement
 // Connect to MongoDB
 connectDB();
 
-// Use email ro
-utes
+// Use email routes
 app.use('/api/email', emailRoutes);
 
 // Create HTTP server
