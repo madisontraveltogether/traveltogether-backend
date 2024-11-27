@@ -1,21 +1,21 @@
 const express = require('express');
 const authController = require('../controllers/authController');
-const authMiddleware = require('../middlewares/authMiddleware');
 const userController = require('../controllers/userController');
+const authMiddleware = require('../middlewares/authMiddleware');
 
 const router = express.Router();
 
-// User registration and login
-router.post('/register', authController.register);    // Public route
-router.post('/login', authController.login);          // Public route
-router.get('/me', authMiddleware, authController.getUser); // Protected route
-router.post('/refresh-token', authController.refreshToken); // Public route, but requires a valid refresh token in the body
-router.post('/logout', authMiddleware, authController.logout); // Protected route
+router.post('/register', authController.register);
+router.post('/login', authController.login);
+router.get('/me', authMiddleware, authController.getUser);
+router.post('/refresh-token', authController.refreshToken);
+router.post('/logout', authMiddleware, authController.logout);
+
 router.patch('/profile/password', authMiddleware, authController.resetPassword);
 router.post('/profile/picture', authMiddleware, userController.uploadProfilePicture);
 router.patch('/profile', authMiddleware, userController.updateUserProfile);
 router.patch('/profile/preferences', authMiddleware, userController.updatePreferences);
-router.get('/auth/profile/notification-preferences', authMiddleware, userController.getNotificationPreferences);
-router.patch('/auth/profile/notification-preferences', authMiddleware, userController.updateNotificationPreferences);
+router.get('/profile/notification-preferences', authMiddleware, userController.getNotificationPreferences);
+router.patch('/profile/notification-preferences', authMiddleware, userController.updateNotificationPreferences);
 
 module.exports = router;

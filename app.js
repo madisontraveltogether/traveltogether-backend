@@ -15,20 +15,22 @@ connectDB();
 app.use(express.json()); // JSON body parser
 
 const corsOptions = {
-  origin: 'https://www.gettraveltogether.com', // Replace with your frontend URL
+  origin: 'https://www.gettraveltogether.com',
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH'],
   allowedHeaders: ['Content-Type', 'Authorization'],
-  credentials: true, // Required for cookies, authorization headers, etc.
+  credentials: true,
 };
 
 app.use(cors(corsOptions));
+app.use(morgan('dev'));
 
-app.use(morgan('dev')); // Logger for development
+// Debugging logs
+console.log('authRoutes:', typeof authRoutes); // Should log 'function' or 'Router'
+console.log('tripRoutes:', typeof tripRoutes); // Should log 'function' or 'Router'
 
 // Routes
 app.use('/api/auth', authRoutes);
 app.use('/api/trips', tripRoutes);
-
 
 // Global error handler
 app.use(errorHandler);

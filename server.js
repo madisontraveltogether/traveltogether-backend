@@ -1,63 +1,48 @@
+require('dotenv').config(); // Load .env variables
+
 const http = require('http');
-const dotenv = require('dotenv');
-const socketIo = require('socket.io');
-const express = require('express');
-const cors = require('cors');
-const path = require('path');
-const app = require('./app'); // Ensure `app.js` has correct configurations
+const app = require('./app'); // Ensure `app.js` is configured correctly
 const connectDB = require('./config/db');
-const emailRoutes = require('./routes/emailRoutes');
-
-app.use('/api/email', emailRoutes);
-
-dotenv.config(); // Load .env variables
+const initializeSocket = require('./utils/socket');
+const emailRoutes = require('./routes/emailRoutes'); // Ensure this is implemented correctly
 
 // Connect to MongoDB
 connectDB();
 
-const corsOptions = {
-  origin: (origin, callback) => {
-    const allowedOrigins = [process.env.FRONTEND_URL, 'https://www.gettraveltogether.com'];
-    if (allowedOrigins.includes(origin) || !origin) {
-      callback(null, true);
-    } else {
-      callback(new Error('Not allowed by CORS'));
-    }
-  },
-  methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH'],
-  allowedHeaders: ['Content-Type', 'Authorization'],
-  credentials: true,
-};
+// Use email routes
+app.use('/api/email', emailRoutes);
 
-app.use(cors(corsOptions));
-
+// Create HTTP server
 const server = http.createServer(app);
-const io = socketIo(server, {
+
+// Initialize Socket.IO
+const io = require('socket.io')(server, {
   cors: {
-    origin: 'https://www.gettraveltogether.com',
+    origin: process.env.FRONTEND_URL || 'https://www.gettraveltogether.com',
     methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH'],
     credentials: true,
   },
 });
 
-// Attach io to app.locals to avoid circular dependencies
+// Attach io to app.locals for shared use
 app.locals.io = io;
 
-// Socket.IO event handling
-io.on('connection', (socket) => {
-  console.log('New client connected:', socket.id);
+// Initialize Socket.IO events
+initializeSocket(io);
 
-  socket.on('joinTrip', (tripId) => {
-    socket.join(tripId);
-    console.log(`Client joined trip room: ${tripId}`);
-  });
+// Handle uncaught exceptions and unhandled promise rejections
+process.on('uncaughtException', (err) => {
+  console.error('Uncaught Exception:', err);
+  process.exit(1); // Exit process after logging
+});
 
-  socket.on('disconnect', () => {
-    console.log('Client disconnected:', socket.id);
-  });
+process.on('unhandledRejection', (err) => {
+  console.error('Unhandled Rejection:', err);
+  process.exit(1); // Exit process after logging
 });
 
 // Start the server
-server.listen(process.env.PORT || 5000, () => {
-  console.log(`Server running on port ${process.env.PORT || 5000}`);
+const PORT = process.env.PORT || 5000;
+server.listen(PORT, () => {
+  console.log(`Server running on port ${PORT}`);
 });
